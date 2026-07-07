@@ -1,7 +1,7 @@
 from app.models.event import MarketEvent
 from app.engine.priority import get_priority
 from app.engine.intelligence import explain_event
-
+from app.engine.confidence import calculate_confidence
 
 def format_signal(event: MarketEvent, score_data: dict) -> str:
     direction = score_data.get("direction", "neutral")
@@ -9,6 +9,7 @@ def format_signal(event: MarketEvent, score_data: dict) -> str:
     priority = get_priority(score)
     intel = explain_event(event, score_data)
     confidence = score_data.get("confidence", "Low")
+    dynamic_confidence = calculate_confidence(score_data)
     reasons = score_data.get("reasons", [])
 
     if direction == "bearish":
@@ -33,8 +34,11 @@ def format_signal(event: MarketEvent, score_data: dict) -> str:
 
 {icon} <b>{title} | {asset}</b>
 
+<b>Overall AI Opinion:</b>
+{intel["overall_opinion"]}
+
 <b>Score:</b> {score}/100
-<b>Confidence:</b> {confidence}
+<b>Confidence:</b> {dynamic_confidence["value"]}% ({dynamic_confidence["label"]})
 <b>AI Impact:</b> {intel["impact"]}
 
 <b>Amount:</b> {amount}
@@ -48,6 +52,23 @@ def format_signal(event: MarketEvent, score_data: dict) -> str:
 <b>Action:</b>
 {intel["action"]}
 
+<b>24h Context:</b>
+{intel["context"]}
+
+<b>Exchange Context:</b>
+{intel["exchange_context"]}
+
+<b>Wallet Intelligence:</b>
+{intel["wallet_ai"]}
+
+<b>Market Regime:</b>
+{intel["market_regime"]}
+
+<b>Whale Pressure:</b>
+{intel["pressure"]}
+
+<b>Wallet Context:</b>
+{intel["wallet_context"]}
 
 <b>Reasons:</b>
 {reasons_text}
