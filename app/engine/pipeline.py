@@ -9,6 +9,8 @@ from app.config_assets import get_min_whale, is_supported_asset
 from app.engine.alert_filter import should_send_alert
 from app.engine.intelligence import explain_event
 from app.telegram.compact_formatter import format_compact_signal
+from app.storage.last_signal import save_last_signal
+
 
 
 def process_event(event: MarketEvent) -> dict:
@@ -69,6 +71,8 @@ def process_event(event: MarketEvent) -> dict:
         }
 
     intel = explain_event(event, score_data)
+
+    save_last_signal(event, score_data, intel)
 
     alert_check = should_send_alert(intel.get("alert_priority_raw", {}))
     if not alert_check["send"]:
