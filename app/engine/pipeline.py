@@ -6,6 +6,8 @@ from app.storage.database import save_event, event_exists
 from app.telegram.formatter import format_signal
 from app.telegram.sender import send_telegram_message
 from app.config_assets import get_min_whale, is_supported_asset
+from app.engine.alert_filter import should_send_alert
+from app.engine.intelligence import explain_event
 
 
 def process_event(event: MarketEvent) -> dict:
@@ -66,6 +68,16 @@ def process_event(event: MarketEvent) -> dict:
         }
 
     message = format_signal(event, score_data)
+    intel = explain_event(event, score_data)
+    alert_check = should_send_alert(intel.get("alert_priority_raw", {}))
+
+    if not alert_check["send"]:
+        return {
+            "status": "ignored",
+            "reason": alert_check["reason"],
+            "score": score_data["score"],
+        }
+
     sent = send_telegram_message(message)
 
     return {
