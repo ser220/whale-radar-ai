@@ -52,6 +52,9 @@ def format_signal(event: MarketEvent, score_data: dict) -> str:
 <b>AI Trade Decision:</b>
 {intel["trade_decision"]}
 
+<b>Signal Rating:</b>
+{intel["signal_rating"]}
+
 <b>Similar Historical Events:</b>
 {intel["similar_events"]}
 

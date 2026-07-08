@@ -21,6 +21,8 @@ from app.engine.smart_narrative import build_smart_money_narrative
 from app.engine.probability_engine import calculate_probability
 from app.engine.trade_decision import build_trade_decision
 from app.engine.similar_events import find_similar_events
+from app.engine.signal_rating import calculate_signal_rating
+
 
 
 def explain_event(event: MarketEvent, score_data: dict) -> dict:
@@ -141,6 +143,14 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         wallet_rank,
     )
 
+    signal_rating = calculate_signal_rating(
+        institutional_score,
+        institutional_confidence,
+        probability,
+        trade_decision,
+        similar_events,
+    )
+
     institutional_trend = get_institutional_trend_from_db(
         event.asset,
         institutional_score["score"],
@@ -251,6 +261,12 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
 
     similar_events_text = similar_events["text"]
 
+    signal_rating_text = (
+        f"{signal_rating['score']}/100\n"
+        f"{signal_rating['label']}\n"
+        f"Priority: {signal_rating['priority']}"
+    )
+
     institutional_trend_text = (
         f"{institutional_trend['text']}\n"
         f"24h Change: {institutional_trend['change']:+d}"
@@ -319,4 +335,6 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "probability": probability_text,   
         "trade_decision": trade_decision_text,
         "similar_events": similar_events_text,
+        "signal_rating": signal_rating_text,
+
     }
