@@ -37,6 +37,15 @@ def format_signal(event: MarketEvent, score_data: dict) -> str:
 <b>Overall AI Opinion:</b>
 {intel["overall_opinion"]}
 
+<b>Event Importance:</b>
+{intel["event_importance"]}
+
+<b>Market Heat:</b>
+{intel["market_heat"]}
+
+<b>Asset Intelligence:</b>
+{intel["asset_ai"]}
+
 <b>Score:</b> {score}/100
 <b>Confidence:</b> {dynamic_confidence["value"]}% ({dynamic_confidence["label"]})
 <b>AI Impact:</b> {intel["impact"]}

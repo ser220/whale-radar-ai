@@ -4,6 +4,9 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 from app.storage.history import get_recent_events, get_events_count
+from app.engine.daily_radar import build_daily_radar
+from app.engine.dashboard import build_dashboard
+
 
 load_dotenv()
 
@@ -49,6 +52,14 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Status: running"
     )
 
+async def daily(update, context):
+    text = build_daily_radar()
+    await update.message.reply_text(text, parse_mode="HTML")
+
+async def dashboard(update, context):
+    text = build_dashboard()
+    await update.message.reply_text(text, parse_mode="HTML")
+
 
 def run_bot():
     if not BOT_TOKEN:
@@ -59,6 +70,9 @@ def run_bot():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("history", history))
     app.add_handler(CommandHandler("status", status))
+    app.add_handler(CommandHandler("daily", daily))
+    app.add_handler(CommandHandler("dashboard", dashboard))
+
 
     print("Telegram polling bot started...")
     app.run_polling()

@@ -5,11 +5,30 @@ from app.engine.context import add_event, get_cluster, is_cluster_important
 from app.storage.database import save_event, event_exists
 from app.telegram.formatter import format_signal
 from app.telegram.sender import send_telegram_message
+from app.config_assets import get_min_whale, is_supported_asset
 
 
 def process_event(event: MarketEvent) -> dict:
     if is_noise_event(event):
         return {"status": "ignored", "reason": "noise_event"}
+
+    if not is_supported_asset(event.asset):
+        return {
+            "status": "ignored",
+            "reason": "unsupported_asset",
+            "asset": event.asset,
+        }
+
+    min_whale = get_min_whale(event.asset)
+
+    if event.amount_usd < min_whale:
+        return {
+            "status": "ignored",
+            "reason": "below_min_whale",
+            "asset": event.asset,
+            "amount_usd": event.amount_usd,
+            "min_whale": min_whale,
+        }
 
     if event_exists(event.tx_hash):
         return {
@@ -30,7 +49,6 @@ def process_event(event: MarketEvent) -> dict:
 
     score_data = score_event(event)
     cluster = get_cluster(event)
-
     score_data["cluster"] = cluster
 
     if is_cluster_important(cluster):

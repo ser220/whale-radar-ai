@@ -6,6 +6,10 @@ from app.engine.wallet_profile import get_wallet_profile
 from app.engine.wallet_intelligence import analyze_wallet
 from app.engine.market_regime import detect_market_regime
 from app.engine.opinion import build_overall_opinion
+from app.engine.asset_intelligence import analyze_asset
+from app.engine.event_importance import calculate_event_importance
+from app.engine.market_heat import calculate_market_heat
+from app.engine.heat_history import record_heat, get_heat_change
 
 
 def explain_event(event: MarketEvent, score_data: dict) -> dict:
@@ -18,6 +22,8 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
     window = cluster.get("window_minutes", 30)
 
     stats_24h = get_asset_stats(event.asset, 24)
+
+    asset_ai = analyze_asset(event.asset)
 
     exchange_name = event.to_entity if direction == "bearish" else event.from_entity
     exchange_stats = get_exchange_stats(exchange_name, 6) if exchange_name else {
@@ -39,10 +45,30 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         wallet_ai,
     )
 
+    market_heat = calculate_market_heat(
+        event.asset,
+        pressure,
+        exchange_stats,
+        wallet_ai,
+        market_regime,
+    )
+
+    heat_change = get_heat_change(event.asset, market_heat["score"], 6)
+    record_heat(event.asset, market_heat["score"], market_heat["label"])    
+
     overall_opinion = build_overall_opinion(
         direction,
         market_regime,
         pressure,
+    )
+
+    event_importance = calculate_event_importance(
+        event.asset,
+        event.amount_usd,
+        score,
+        pressure,
+        market_regime,
+        wallet_ai,
     )
 
     if score >= 85:
@@ -95,6 +121,24 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         f"Action: {overall_opinion['action']}"
     )
 
+    event_importance_text = (
+        f"{event_importance['score']}/100\n"
+        f"{event_importance['label']}"
+    )
+
+    market_heat_text = (
+        f"{market_heat['score']}/100\n"
+        f"{market_heat['label']}\n"
+        f"{heat_change['text']}"
+    )
+
+    asset_ai_text = (
+        f"{event.asset}: {asset_ai['rating']}\n"
+        f"Tier: {asset_ai['tier']}\n"
+        f"Sector: {asset_ai['sector']}\n"
+        f"Importance: {asset_ai['importance']}/100"
+    )
+
     is_cluster = count >= 3 or total_usd >= 100_000_000
 
     if is_cluster:
@@ -128,6 +172,13 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
             summary = "Neutral whale transfer. No strong directional signal."
             action = "Watch only. Wait for confirmation."
 
+            asset_ai_text = (
+                f"{event.asset}: {asset_ai['rating']}\n"
+                f"Tier: {asset_ai['tier']}\n"
+                f"Sector: {asset_ai['sector']}\n"
+                f"Importance: {asset_ai['importance']}/100"
+            )
+
     return {
         "impact": impact,
         "summary": summary,
@@ -139,4 +190,8 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "wallet_ai": wallet_ai_text,
         "market_regime": market_regime_text,
         "overall_opinion": overall_opinion_text,
+        "asset_ai": asset_ai_text,
+        "event_importance": event_importance_text,
+        "market_heat": market_heat_text,
+
     }
