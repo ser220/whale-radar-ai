@@ -19,6 +19,8 @@ from app.engine.wallet_ranking import rank_wallet
 from app.engine.institutional_confidence import calculate_institutional_confidence
 from app.engine.smart_narrative import build_smart_money_narrative
 from app.engine.probability_engine import calculate_probability
+from app.engine.trade_decision import build_trade_decision
+
 
 
 def explain_event(event: MarketEvent, score_data: dict) -> dict:
@@ -124,6 +126,15 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         wallet_rank,
     )
 
+    trade_decision = build_trade_decision(
+        direction,
+        probability,
+        institutional_confidence,
+        market_regime,
+        market_heat,
+        wallet_rank,
+    )
+
     institutional_trend = get_institutional_trend_from_db(
         event.asset,
         institutional_score["score"],
@@ -163,6 +174,13 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
     pressure_text = (
         f"{event.asset} 6h: Bullish {pressure['bullish_pct']}% / "
         f"Bearish {pressure['bearish_pct']}% — {pressure['bias']}"
+    )
+
+    trade_decision_text = (
+        f"Recommendation: {trade_decision['recommendation']}\n"
+        f"Setup Quality: {trade_decision['setup_quality']}/100\n"
+        f"Risk/Reward: {trade_decision['risk_reward']}\n"
+        f"Reason: {', '.join(trade_decision['reason'])}"
     )
 
     wallet_context = (
@@ -291,5 +309,6 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "institutional_confidence": institutional_confidence_text,
         "smart_narrative": smart_narrative_text,
         "probability": probability_text,   
+        "trade_decision": trade_decision_text,
 
     }
