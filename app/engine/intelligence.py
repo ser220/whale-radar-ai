@@ -10,6 +10,15 @@ from app.engine.asset_intelligence import analyze_asset
 from app.engine.event_importance import calculate_event_importance
 from app.engine.market_heat import calculate_market_heat
 from app.engine.heat_history import record_heat, get_heat_change
+from app.engine.institutional_score import calculate_institutional_score
+from app.engine.institutional_history import (
+    record_institutional_snapshot,
+    get_institutional_trend_from_db,
+)
+from app.engine.wallet_ranking import rank_wallet
+from app.engine.institutional_confidence import calculate_institutional_confidence
+from app.engine.smart_narrative import build_smart_money_narrative
+from app.engine.probability_engine import calculate_probability
 
 
 def explain_event(event: MarketEvent, score_data: dict) -> dict:
@@ -37,6 +46,8 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
     wallet_name = event.from_entity if direction == "bearish" else event.to_entity
     wallet_profile = get_wallet_profile(wallet_name)
     wallet_ai = analyze_wallet(wallet_name, direction)
+    wallet_rank = rank_wallet(wallet_name)
+
 
     market_regime = detect_market_regime(
         direction,
@@ -69,6 +80,63 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         pressure,
         market_regime,
         wallet_ai,
+    )
+
+    institutional_confidence = calculate_institutional_confidence(
+        asset_ai,
+        wallet_rank,
+        wallet_ai,
+        market_heat,
+        event_importance,
+        market_regime,
+        pressure,
+    )
+
+
+    institutional_score = calculate_institutional_score(
+        asset_ai,
+        market_heat,
+        event_importance,
+        market_regime,
+        pressure,
+        wallet_ai,
+    )
+
+
+    smart_narrative = build_smart_money_narrative(
+        event,
+        direction,
+        institutional_score,
+        institutional_confidence,
+        market_heat,
+        heat_change,
+        wallet_rank,
+        wallet_ai,
+        market_regime,
+        pressure,
+    )
+
+    probability = calculate_probability(
+        institutional_score,
+        institutional_confidence,
+        market_regime,
+        pressure,
+        wallet_rank,
+    )
+
+    institutional_trend = get_institutional_trend_from_db(
+        event.asset,
+        institutional_score["score"],
+        24,
+    )
+
+    record_institutional_snapshot(
+        event.asset,
+        institutional_score["score"],
+        market_heat["score"],
+        event_importance["score"],
+        market_regime["regime"],
+        pressure["bias"],
     )
 
     if score >= 85:
@@ -115,6 +183,13 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         f"{market_regime['message']}"
     )
 
+    wallet_rank_text = (
+        f"{wallet_rank['wallet']}\n"
+        f"{wallet_rank['label']}\n"
+        f"Type: {wallet_rank['type']}\n"
+        f"Rank: {wallet_rank['rank']}/100"
+    )
+
     overall_opinion_text = (
         f"Bias: {overall_opinion['bias']}\n"
         f"Risk: {overall_opinion['risk']}\n"
@@ -131,6 +206,30 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         f"{market_heat['label']}\n"
         f"{heat_change['text']}"
     )
+    
+    institutional_score_text = (
+        f"{institutional_score['score']}/100\n"
+        f"{institutional_score['rating']}"
+    )
+
+    institutional_confidence_text = (
+        f"{institutional_confidence['score']}/100\n"
+        f"{institutional_confidence['label']}"
+    )
+
+    smart_narrative_text = smart_narrative["text"]
+
+    probability_text = (
+        f"Bearish: {probability['bearish']}%\n"
+        f"Bullish: {probability['bullish']}%\n"
+        f"Expected: {probability['bias']}"
+    )
+
+    institutional_trend_text = (
+        f"{institutional_trend['text']}\n"
+        f"24h Change: {institutional_trend['change']:+d}"
+    )
+
 
     asset_ai_text = (
         f"{event.asset}: {asset_ai['rating']}\n"
@@ -172,13 +271,6 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
             summary = "Neutral whale transfer. No strong directional signal."
             action = "Watch only. Wait for confirmation."
 
-            asset_ai_text = (
-                f"{event.asset}: {asset_ai['rating']}\n"
-                f"Tier: {asset_ai['tier']}\n"
-                f"Sector: {asset_ai['sector']}\n"
-                f"Importance: {asset_ai['importance']}/100"
-            )
-
     return {
         "impact": impact,
         "summary": summary,
@@ -193,5 +285,11 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "asset_ai": asset_ai_text,
         "event_importance": event_importance_text,
         "market_heat": market_heat_text,
+        "institutional_score": institutional_score_text,
+        "institutional_trend": institutional_trend_text,
+        "wallet_rank": wallet_rank_text,
+        "institutional_confidence": institutional_confidence_text,
+        "smart_narrative": smart_narrative_text,
+        "probability": probability_text,   
 
     }
