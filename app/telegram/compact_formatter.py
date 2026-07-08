@@ -10,6 +10,12 @@ def format_compact_signal(event, score_data, intel):
 <b>AI Trade Decision:</b>
 {intel["trade_decision"]}
 
+<b>AI Entry Plan:</b>
+{intel["entry_plan"]}
+
+<b>AI Price Plan:</b>
+{intel["price_plan"]}
+
 <b>AI Probability:</b>
 {intel["probability"]}
 

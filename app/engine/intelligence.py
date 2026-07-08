@@ -23,6 +23,9 @@ from app.engine.trade_decision import build_trade_decision
 from app.engine.similar_events import find_similar_events
 from app.engine.signal_rating import calculate_signal_rating
 from app.engine.alert_priority import classify_alert_priority
+from app.engine.entry_planner import plan_entry
+from app.engine.price_planner import build_price_plan
+from app.engine.live_market import get_price
 
 
 def explain_event(event: MarketEvent, score_data: dict) -> dict:
@@ -151,6 +154,18 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         similar_events,
     )
 
+    entry_plan = plan_entry(
+        direction,
+        probability,
+        trade_decision,
+        market_regime,
+        market_heat,
+        signal_rating,
+    )
+
+    current_price = get_price(event.asset)
+    price_plan = build_price_plan(direction, current_price)
+
     alert_priority = classify_alert_priority(signal_rating)
 
     institutional_trend = get_institutional_trend_from_db(
@@ -274,6 +289,22 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         f"{alert_priority['message']}"
     )
 
+    entry_plan_text = (
+        f"Direction: {entry_plan['direction']}\n"
+        f"Entry: {entry_plan['entry']}\n"
+        f"Timing: {entry_plan['timing']}\n"
+        f"Reason: {entry_plan['reason']}"
+    )
+
+    price_plan_text = (
+        f"Entry Zone: {price_plan['entry_zone']}\n"
+        f"Stop: {price_plan['stop']}\n"
+        f"TP1: {price_plan['tp1']}\n"
+        f"TP2: {price_plan['tp2']}\n"
+        f"RR: {price_plan['rr']}\n"
+        f"Note: {price_plan['note']}"
+    )
+
     institutional_trend_text = (
         f"{institutional_trend['text']}\n"
         f"24h Change: {institutional_trend['change']:+d}"
@@ -344,5 +375,7 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "similar_events": similar_events_text,
         "signal_rating": signal_rating_text,
         "alert_priority": alert_priority_text,
+        "entry_plan": entry_plan_text,
+        "price_plan": price_plan_text,
 
     }
