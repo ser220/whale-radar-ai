@@ -20,7 +20,7 @@ from app.engine.institutional_confidence import calculate_institutional_confiden
 from app.engine.smart_narrative import build_smart_money_narrative
 from app.engine.probability_engine import calculate_probability
 from app.engine.trade_decision import build_trade_decision
-
+from app.engine.similar_events import find_similar_events
 
 
 def explain_event(event: MarketEvent, score_data: dict) -> dict:
@@ -124,6 +124,12 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         market_regime,
         pressure,
         wallet_rank,
+    )
+
+    similar_events = find_similar_events(
+        event.asset,
+        direction,
+        wallet_name,
     )
 
     trade_decision = build_trade_decision(
@@ -243,6 +249,8 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         f"Expected: {probability['bias']}"
     )
 
+    similar_events_text = similar_events["text"]
+
     institutional_trend_text = (
         f"{institutional_trend['text']}\n"
         f"24h Change: {institutional_trend['change']:+d}"
@@ -310,5 +318,5 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "smart_narrative": smart_narrative_text,
         "probability": probability_text,   
         "trade_decision": trade_decision_text,
-
+        "similar_events": similar_events_text,
     }
