@@ -22,7 +22,7 @@ from app.engine.probability_engine import calculate_probability
 from app.engine.trade_decision import build_trade_decision
 from app.engine.similar_events import find_similar_events
 from app.engine.signal_rating import calculate_signal_rating
-
+from app.engine.alert_priority import classify_alert_priority
 
 
 def explain_event(event: MarketEvent, score_data: dict) -> dict:
@@ -151,6 +151,8 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         similar_events,
     )
 
+    alert_priority = classify_alert_priority(signal_rating)
+
     institutional_trend = get_institutional_trend_from_db(
         event.asset,
         institutional_score["score"],
@@ -267,6 +269,11 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         f"Priority: {signal_rating['priority']}"
     )
 
+    alert_priority_text = (
+        f"{alert_priority['emoji']} {alert_priority['level']}\n"
+        f"{alert_priority['message']}"
+    )
+
     institutional_trend_text = (
         f"{institutional_trend['text']}\n"
         f"24h Change: {institutional_trend['change']:+d}"
@@ -336,5 +343,6 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "trade_decision": trade_decision_text,
         "similar_events": similar_events_text,
         "signal_rating": signal_rating_text,
+        "alert_priority": alert_priority_text,
 
     }
