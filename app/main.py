@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Header, HTTPException
-from app.sources.arkham_parser import parse_arkham_payload
+from app.sources.arkham import ArkhamAdapter
 from app.engine.pipeline import process_event
 
 app = FastAPI(title="Whale Radar AI")
@@ -21,7 +21,14 @@ async def arkham_webhook(
         raise HTTPException(status_code=401, detail="Invalid webhook secret")
 
     payload = await request.json()
-    event = parse_arkham_payload(payload)
+    event = ArkhamAdapter().parse(payload)
+
+    if not event:
+        return {
+            "ok": False,
+            "error": "invalid_arkham_payload",
+        }
+
     result = process_event(event)
 
     return {"ok": True, "result": result}
