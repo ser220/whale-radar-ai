@@ -26,6 +26,9 @@ from app.engine.alert_priority import classify_alert_priority
 from app.engine.entry_planner import plan_entry
 from app.engine.price_planner import build_price_plan
 from app.engine.live_market import get_price
+from app.engine.target_projection import project_target
+from app.engine.risk_engine import calculate_ai_risk
+
 
 
 def explain_event(event: MarketEvent, score_data: dict) -> dict:
@@ -165,6 +168,24 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
 
     current_price = get_price(event.asset)
     price_plan = build_price_plan(direction, current_price)
+    target_projection = project_target(
+        direction,
+        current_price,
+        probability,
+        institutional_confidence,
+        market_heat,
+        signal_rating,
+    )
+
+    ai_risk = calculate_ai_risk(
+        direction,
+        probability,
+        institutional_confidence,
+        market_regime,
+        market_heat,
+        wallet_rank,
+        signal_rating,
+    )
 
     alert_priority = classify_alert_priority(signal_rating)
 
@@ -310,6 +331,25 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         f"24h Change: {institutional_trend['change']:+d}"
     )
 
+    target_projection_text = (
+        f"Expected Move: {target_projection['expected_move_pct']}\n"
+        f"Target: {target_projection['target']}\n"
+        f"ETA: {target_projection['eta']}\n"
+        f"Confidence: {target_projection['confidence']}\n"
+        f"Note: {target_projection['note']}"
+    )
+
+
+    ai_risk_text = (
+        f"LONG Risk: {ai_risk['long_risk']}/100\n"
+        f"SHORT Risk: {ai_risk['short_risk']}/100\n"
+        f"Continuation: {ai_risk['continuation']}%\n"
+        f"Reversal: {ai_risk['reversal']}%\n"
+        f"Fakeout Risk: {ai_risk['fakeout']}%\n"
+        f"Bull Trap Risk: {ai_risk['bull_trap']}/100\n"
+        f"Bear Trap Risk: {ai_risk['bear_trap']}/100\n"
+        f"Recommended Bias: {ai_risk['recommended_bias']}"
+    )
 
     asset_ai_text = (
         f"{event.asset}: {asset_ai['rating']}\n"
@@ -377,5 +417,7 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "alert_priority": alert_priority_text,
         "entry_plan": entry_plan_text,
         "price_plan": price_plan_text,
+        "target_projection": target_projection_text,
+        "ai_risk": ai_risk_text,
 
     }
