@@ -18,6 +18,7 @@ from app.engine.module_learning import get_module_learning_stats, format_module_
 from app.engine.adaptive_weights import get_adaptive_weights, format_adaptive_weights
 from app.engine.adaptive_weights import get_adaptive_weights, format_adaptive_weights
 from app.engine.learning_engine import get_learning_stats, format_learning_stats
+from app.engine.context_learning import get_context_stats, format_context_stats
 
 
 
@@ -253,6 +254,11 @@ async def brain(update, context):
 
     await update.message.reply_text(text, parse_mode="HTML")
 
+async def context(update, context):
+    rows = get_context_stats()
+    text = format_context_stats(rows)
+    await update.message.reply_text(text, parse_mode="HTML")
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -273,6 +279,7 @@ def run_bot():
     app.add_handler(CommandHandler("modules", modules))
     app.add_handler(CommandHandler("weights", weights))
     app.add_handler(CommandHandler("brain", brain))
+    app.add_handler(CommandHandler("context", context))
 
     print("Telegram polling bot started...")
     app.run_polling()
