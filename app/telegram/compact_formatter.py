@@ -34,6 +34,9 @@ def format_compact_signal(event, score_data, intel):
 <b>Dynamic Confidence Shadow:</b>
 {intel["dynamic_confidence"]}
 
+<b>Pattern Confidence:</b>
+{intel["pattern_confidence"]}
+
 <b>AI Probability:</b>
 {intel["probability"]}
 

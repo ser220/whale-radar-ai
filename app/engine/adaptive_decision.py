@@ -1,26 +1,22 @@
-from app.engine.adaptive_weights import get_adaptive_weights
+from app.engine.dynamic_confidence import calculate_dynamic_confidence
 
 
-def build_adaptive_decision_shadow(probability: dict, ai_decision: dict) -> dict:
-    weights = get_adaptive_weights()
+def build_adaptive_decision_shadow(
+    probability: dict,
+    ai_decision: dict,
+    campaign: dict = None,
+    wallet_behaviour: dict = None,
+    scenario: list = None,
+) -> dict:
+    dynamic = calculate_dynamic_confidence(
+        probability=probability,
+        campaign=campaign or {},
+        wallet_behaviour=wallet_behaviour or {},
+        scenario=scenario or [],
+        ai_decision=ai_decision,
+    )
 
-    bearish = probability.get("bearish", 50)
-    bullish = probability.get("bullish", 50)
-
-    probability_weight = weights.get("Probability Engine", 1.0)
-    decision_weight = weights.get("Decision Engine", 1.0)
-    campaign_weight = weights.get("Campaign Detector", 1.0)
-
-    base_confidence = ai_decision.get("overall_confidence", max(bearish, bullish))
-
-    weighted_confidence = base_confidence
-    weighted_confidence = weighted_confidence * decision_weight
-    weighted_confidence = weighted_confidence * probability_weight
-    weighted_confidence = weighted_confidence * campaign_weight
-
-    weighted_confidence = max(0, min(100, round(weighted_confidence, 1)))
-
-    difference = round(weighted_confidence - base_confidence, 1)
+    difference = dynamic["difference"]
 
     if abs(difference) < 1:
         verdict = "No meaningful difference"
@@ -30,11 +26,10 @@ def build_adaptive_decision_shadow(probability: dict, ai_decision: dict) -> dict
         verdict = "Adaptive model is less confident"
 
     return {
-        "base_confidence": base_confidence,
-        "adaptive_confidence": weighted_confidence,
+        "base_confidence": dynamic["old"],
+        "adaptive_confidence": dynamic["confidence"],
         "difference": difference,
         "verdict": verdict,
-        "weights": weights,
     }
 
 

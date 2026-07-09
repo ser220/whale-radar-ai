@@ -37,6 +37,10 @@ from app.engine.scenario_engine import build_market_scenarios, format_market_sce
 from app.engine.decision_engine import build_ai_decision, format_ai_decision
 from app.engine.adaptive_decision import build_adaptive_decision_shadow, format_adaptive_decision_shadow
 from app.engine.dynamic_confidence import calculate_dynamic_confidence, format_dynamic_confidence
+from app.engine.pattern_confidence import (
+    calculate_pattern_confidence,
+    format_pattern_confidence,
+)
 
 
 
@@ -245,6 +249,9 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
     adaptive_decision_shadow = build_adaptive_decision_shadow(
         probability,
         ai_decision,
+        campaign,
+        wallet_behaviour,
+        market_scenarios,
     )
 
     dynamic_confidence = calculate_dynamic_confidence(
@@ -253,6 +260,19 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         wallet_behaviour,
         market_scenarios,
         ai_decision,
+    )
+
+    pattern_confidence = calculate_pattern_confidence(
+        asset=event.asset.upper(),
+        direction=direction,
+        market_regime=market_regime.get("regime", "Unknown"),
+        market_heat=market_heat.get("label", "Unknown"),
+        wallet_behaviour=wallet_behaviour.get("behaviour", "Unknown"),
+        current_confidence=ai_decision["overall_confidence"],
+    )
+
+    pattern_confidence_text = format_pattern_confidence(
+        pattern_confidence
     )
 
     alert_priority = classify_alert_priority(signal_rating)
@@ -529,6 +549,8 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "dynamic_confidence": dynamic_confidence_text,
         "market_regime_raw": market_regime,
         "market_heat_raw": market_heat,
+        "pattern_confidence": pattern_confidence_text,
+        "pattern_confidence_raw": pattern_confidence,
 
 
     }
