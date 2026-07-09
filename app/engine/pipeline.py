@@ -10,7 +10,8 @@ from app.engine.alert_filter import should_send_alert
 from app.engine.intelligence import explain_event
 from app.telegram.compact_formatter import format_compact_signal
 from app.storage.last_signal import save_last_signal
-
+from app.engine.outcome_engine import save_prediction
+from app.contracts import TARGET_PROJECTION_KEYS, has_required_keys
 
 
 def process_event(event: MarketEvent) -> dict:
@@ -71,6 +72,21 @@ def process_event(event: MarketEvent) -> dict:
         }
 
     intel = explain_event(event, score_data)
+
+    projection = intel.get("target_projection_raw")
+
+    if projection and has_required_keys(projection, TARGET_PROJECTION_KEYS):
+        try:
+            save_prediction(
+                asset=event.asset,
+                direction=score_data["direction"],
+                entry_price=float(intel["current_price"]),
+                target_price=float(projection["target"]),
+                expected_move=float(str(projection["expected_move_pct"]).replace("%", "")),
+                eta=projection["eta"],
+            )
+        except Exception as e:
+            print(f"Outcome save failed: {e}")
 
     save_last_signal(event, score_data, intel)
 
