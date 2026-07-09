@@ -21,6 +21,10 @@ from app.engine.learning_engine import get_learning_stats, format_learning_stats
 from app.engine.context_learning import get_context_stats, format_context_stats
 from app.engine.pattern_memory import get_pattern_memory, format_pattern_memory
 from app.engine.pattern_memory import get_structured_patterns, format_structured_patterns
+from app.engine.calibration_engine import calculate_calibration_weights, format_calibration_weights
+from app.engine.calibration_audit import build_calibration_audit, format_calibration_audit
+from app.engine.maintenance_engine import build_maintenance_report, format_maintenance_report
+from app.engine.health_center import build_health_center, format_health_center
 
 
 
@@ -271,6 +275,26 @@ async def structured_patterns(update, context):
     text = format_structured_patterns(rows)
     await update.message.reply_text(text, parse_mode="HTML")
 
+async def calibration(update, context):
+    weights = calculate_calibration_weights()
+    text = format_calibration_weights(weights)
+    await update.message.reply_text(text, parse_mode="HTML")
+
+async def audit(update, context):
+    data = build_calibration_audit()
+    text = format_calibration_audit(data)
+    await update.message.reply_text(text, parse_mode="HTML")
+
+async def maintenance(update, context):
+    report = build_maintenance_report()
+    text = format_maintenance_report(report)
+    await update.message.reply_text(text, parse_mode="HTML")
+
+async def health(update, context):
+    data = build_health_center()
+    text = format_health_center(data)
+    await update.message.reply_text(text, parse_mode="HTML")
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -294,7 +318,10 @@ def run_bot():
     app.add_handler(CommandHandler("context", context))
     app.add_handler(CommandHandler("patterns", patterns))
     app.add_handler(CommandHandler("structured_patterns", structured_patterns))
-
+    app.add_handler(CommandHandler("calibration", calibration))
+    app.add_handler(CommandHandler("audit", audit))
+    app.add_handler(CommandHandler("maintenance", maintenance))
+    app.add_handler(CommandHandler("health", health))
 
     print("Telegram polling bot started...")
     app.run_polling()
