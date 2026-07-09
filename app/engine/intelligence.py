@@ -512,6 +512,11 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "wallet_behaviour": wallet_behaviour_text,
         "current_price": current_price,
         "target_projection_raw": target_projection,
+        "probability_raw": probability,
+        "campaign_raw": campaign,
+        "wallet_behaviour_raw": wallet_behaviour,
+        "market_scenarios_raw": market_scenarios,
+        "ai_decision_raw": ai_decision,
         "event_memory": event_memory_text,
         "market_scenarios": market_scenarios_text,
         "ai_decision": ai_decision_text,
@@ -522,5 +527,8 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "ai_decision_raw": ai_decision,
         "adaptive_decision_shadow": adaptive_decision_shadow_text,
         "dynamic_confidence": dynamic_confidence_text,
+        "market_regime_raw": market_regime,
+        "market_heat_raw": market_heat,
+
 
     }

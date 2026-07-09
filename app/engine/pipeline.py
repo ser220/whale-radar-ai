@@ -90,6 +90,8 @@ def process_event(event: MarketEvent) -> dict:
                 "wallet_behaviour": intel.get("wallet_behaviour_raw", {}),
                 "scenario": intel.get("market_scenarios_raw", []),
                 "decision": intel.get("ai_decision_raw", {}),
+                "market_regime": intel.get("market_regime_raw", {}),
+                "market_heat": intel.get("market_heat_raw", {}),
             },
         )
 
