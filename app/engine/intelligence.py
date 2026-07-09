@@ -496,5 +496,9 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "event_memory": event_memory_text,
         "market_scenarios": market_scenarios_text,
         "ai_decision": ai_decision_text,
-
+        "probability_raw": probability,
+        "campaign_raw": campaign,
+        "wallet_behaviour_raw": wallet_behaviour,
+        "market_scenarios_raw": market_scenarios,
+        "ai_decision_raw": ai_decision,
     }

@@ -78,13 +78,21 @@ def process_event(event: MarketEvent) -> dict:
     if projection and has_required_keys(projection, TARGET_PROJECTION_KEYS):
         try:
             save_prediction(
-                asset=event.asset,
-                direction=score_data["direction"],
-                entry_price=float(intel["current_price"]),
-                target_price=float(projection["target"]),
-                expected_move=float(str(projection["expected_move_pct"]).replace("%", "")),
-                eta=projection["eta"],
-            )
+            asset=event.asset,
+            direction=score_data["direction"],
+            entry_price=float(intel["current_price"]),
+            target_price=float(projection["target"]),
+            expected_move=float(str(projection["expected_move_pct"]).replace("%", "")),
+            eta=projection["eta"],
+            ai_snapshot={
+                "probability": intel.get("probability_raw", {}),
+                "campaign": intel.get("campaign_raw", {}),
+                "wallet_behaviour": intel.get("wallet_behaviour_raw", {}),
+                "scenario": intel.get("market_scenarios_raw", []),
+                "decision": intel.get("ai_decision_raw", {}),
+            },
+        )
+
         except Exception as e:
             print(f"Outcome save failed: {e}")
 

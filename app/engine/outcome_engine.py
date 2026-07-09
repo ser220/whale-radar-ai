@@ -1,7 +1,9 @@
+import json
 import sqlite3
 from datetime import datetime
 
 from app.config import DB_PATH
+from app.engine.live_market import get_price
 from app.engine.module_learning import update_module_learning
 from app.engine.module_evaluator import evaluate_modules
 
@@ -13,6 +15,7 @@ def save_prediction(
     target_price: float,
     expected_move: float,
     eta: str,
+    ai_snapshot: dict = None,
 ):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
@@ -31,6 +34,15 @@ def save_prediction(
         )
     """)
 
+    try:
+        cur.execute("""
+            ALTER TABLE prediction_history
+            ADD COLUMN ai_snapshot TEXT
+        """)
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+
     cur.execute("""
         INSERT INTO prediction_history(
             asset,
@@ -39,21 +51,24 @@ def save_prediction(
             target_price,
             expected_move,
             eta,
-            created_at
+            created_at,
+            ai_snapshot
         )
-        VALUES(?,?,?,?,?,?,?)
-    """,(
+        VALUES(?,?,?,?,?,?,?,?)
+    """, (
         asset,
         direction,
         entry_price,
         target_price,
         expected_move,
         eta,
-        datetime.utcnow().isoformat()
+        datetime.utcnow().isoformat(),
+        json.dumps(ai_snapshot or {}),
     ))
 
     conn.commit()
     conn.close()
+
 from app.engine.live_market import get_price
 
 
