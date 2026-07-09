@@ -22,6 +22,9 @@ def format_compact_signal(event, score_data, intel):
 <b>AI Risk Assessment:</b>
 {intel["ai_risk"]}
 
+<b>AI Market Scenarios:</b>
+{intel["market_scenarios"]}
+
 <b>AI Probability:</b>
 {intel["probability"]}
 
