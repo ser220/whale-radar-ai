@@ -16,6 +16,8 @@ from app.engine.outcome_engine import evaluate_open_predictions
 from app.engine.learning_engine import get_learning_stats, format_learning_stats
 from app.engine.module_learning import get_module_learning_stats, format_module_learning_stats
 from app.engine.adaptive_weights import get_adaptive_weights, format_adaptive_weights
+from app.engine.adaptive_weights import get_adaptive_weights, format_adaptive_weights
+from app.engine.learning_engine import get_learning_stats, format_learning_stats
 
 
 
@@ -235,6 +237,22 @@ async def weights(update, context):
 
     await update.message.reply_text(text, parse_mode="HTML")
 
+async def brain(update, context):
+    weights = get_adaptive_weights()
+    learning = get_learning_stats()
+
+    text = (
+        "🧠 <b>Whale Radar AI Brain</b>\n\n"
+        "<b>Learning Stats:</b>\n"
+        f"{format_learning_stats(learning)}\n\n"
+        "<b>Adaptive Weights:</b>\n"
+        f"{format_adaptive_weights(weights)}\n\n"
+        "Mode: Shadow / Observation\n"
+        "Status: Adaptive logic active, not yet controlling final decisions."
+    )
+
+    await update.message.reply_text(text, parse_mode="HTML")
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -254,7 +272,7 @@ def run_bot():
     app.add_handler(CommandHandler("learning", learning))
     app.add_handler(CommandHandler("modules", modules))
     app.add_handler(CommandHandler("weights", weights))
-
+    app.add_handler(CommandHandler("brain", brain))
 
     print("Telegram polling bot started...")
     app.run_polling()
