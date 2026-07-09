@@ -31,6 +31,9 @@ def format_compact_signal(event, score_data, intel):
 <b>Meta Decision:</b>
 {intel["meta_decision"]}
 
+<b>AI Self Confidence:</b>
+{intel["self_confidence"]}
+
 <b>Adaptive Decision Shadow:</b>
 {intel["adaptive_decision_shadow"]}
 

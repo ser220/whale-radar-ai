@@ -42,6 +42,7 @@ from app.engine.pattern_confidence import (
     format_pattern_confidence,
 )
 from app.engine.meta_decision import build_meta_decision, format_meta_decision
+from app.engine.self_confidence import calculate_self_confidence, format_self_confidence
 
 
 
@@ -289,6 +290,15 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
     )
 
     meta_decision_text = format_meta_decision(meta_decision)
+
+    self_confidence = calculate_self_confidence(
+        meta_decision=meta_decision,
+        pattern_confidence=pattern_confidence,
+        context_score=meta_decision.get("context", 50),
+        module_score=meta_decision.get("module_learning", 50),
+    )
+
+    self_confidence_text = format_self_confidence(self_confidence)
 
     alert_priority = classify_alert_priority(signal_rating)
 
@@ -568,5 +578,8 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "pattern_confidence_raw": pattern_confidence,
         "meta_decision": meta_decision_text,
         "meta_decision_raw": meta_decision,
+        "self_confidence": self_confidence_text,
+        "self_confidence_raw": self_confidence,
+
 
     }
