@@ -19,6 +19,8 @@ from app.engine.adaptive_weights import get_adaptive_weights, format_adaptive_we
 from app.engine.adaptive_weights import get_adaptive_weights, format_adaptive_weights
 from app.engine.learning_engine import get_learning_stats, format_learning_stats
 from app.engine.context_learning import get_context_stats, format_context_stats
+from app.engine.pattern_memory import get_pattern_memory, format_pattern_memory
+from app.engine.pattern_memory import get_structured_patterns, format_structured_patterns
 
 
 
@@ -259,6 +261,16 @@ async def context(update, context):
     text = format_context_stats(rows)
     await update.message.reply_text(text, parse_mode="HTML")
 
+async def patterns(update, context):
+    data = get_pattern_memory()
+    text = format_pattern_memory(data)
+    await update.message.reply_text(text, parse_mode="HTML")
+
+async def structured_patterns(update, context):
+    rows = get_structured_patterns()
+    text = format_structured_patterns(rows)
+    await update.message.reply_text(text, parse_mode="HTML")
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -280,6 +292,9 @@ def run_bot():
     app.add_handler(CommandHandler("weights", weights))
     app.add_handler(CommandHandler("brain", brain))
     app.add_handler(CommandHandler("context", context))
+    app.add_handler(CommandHandler("patterns", patterns))
+    app.add_handler(CommandHandler("structured_patterns", structured_patterns))
+
 
     print("Telegram polling bot started...")
     app.run_polling()
