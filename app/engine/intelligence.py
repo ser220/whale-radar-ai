@@ -81,6 +81,18 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         direction,
         24,
     )
+
+    campaign_story = ""
+
+    if event_memory["events"] >= 5:
+        campaign_story = (
+            f"\n\nThis appears to be an ongoing institutional campaign.\n"
+            f"{event_memory['events']} related transfers "
+            f"totalling ${event_memory['total_usd']:,.0f} "
+            f"have been detected during the last "
+            f"{event_memory['hours']} hours."
+        )
+
     market_regime = detect_market_regime(
         direction,
         count,
@@ -147,6 +159,7 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         market_regime,
         pressure,
     )
+
 
     probability = calculate_probability(
         institutional_score,
@@ -322,7 +335,7 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         f"{institutional_confidence['label']}"
     )
 
-    smart_narrative_text = smart_narrative["text"]
+    smart_narrative_text = smart_narrative["text"] + campaign_story
 
     probability_text = (
         f"Bearish: {probability['bearish']}%\n"
