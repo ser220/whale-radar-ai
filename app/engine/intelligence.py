@@ -35,6 +35,8 @@ from app.engine.wallet_behaviour import analyze_wallet_behaviour, format_wallet_
 from app.engine.event_memory import analyze_event_memory, format_event_memory
 from app.engine.scenario_engine import build_market_scenarios, format_market_scenarios
 from app.engine.decision_engine import build_ai_decision, format_ai_decision
+from app.engine.adaptive_decision import build_adaptive_decision_shadow, format_adaptive_decision_shadow
+from app.engine.dynamic_confidence import calculate_dynamic_confidence, format_dynamic_confidence
 
 
 
@@ -240,6 +242,19 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         market_scenarios,
     )
 
+    adaptive_decision_shadow = build_adaptive_decision_shadow(
+        probability,
+        ai_decision,
+    )
+
+    dynamic_confidence = calculate_dynamic_confidence(
+        probability,
+        campaign,
+        wallet_behaviour,
+        market_scenarios,
+        ai_decision,
+    )
+
     alert_priority = classify_alert_priority(signal_rating)
 
     institutional_trend = get_institutional_trend_from_db(
@@ -419,6 +434,10 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
 
     ai_decision_text = format_ai_decision(ai_decision)
 
+    adaptive_decision_shadow_text = format_adaptive_decision_shadow(adaptive_decision_shadow)
+
+    dynamic_confidence_text = format_dynamic_confidence(dynamic_confidence)
+
     asset_ai_text = (
         f"{event.asset}: {asset_ai['rating']}\n"
         f"Tier: {asset_ai['tier']}\n"
@@ -501,4 +520,7 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "wallet_behaviour_raw": wallet_behaviour,
         "market_scenarios_raw": market_scenarios,
         "ai_decision_raw": ai_decision,
+        "adaptive_decision_shadow": adaptive_decision_shadow_text,
+        "dynamic_confidence": dynamic_confidence_text,
+
     }
