@@ -31,6 +31,8 @@ from app.engine.risk_engine import calculate_ai_risk
 from app.engine.source_consensus import calculate_source_consensus
 from app.engine.campaign_detector import detect_campaign, format_campaign
 from app.engine.wallet_memory import analyze_wallet_memory, format_wallet_memory
+from app.engine.wallet_behaviour import analyze_wallet_behaviour, format_wallet_behaviour
+
 
 
 def explain_event(event: MarketEvent, score_data: dict) -> dict:
@@ -67,7 +69,11 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         24,
     )
     wallet_memory = analyze_wallet_memory(wallet_name)
-
+    wallet_behaviour = analyze_wallet_behaviour(
+        wallet_memory,
+        campaign,
+        direction,
+    )
     market_regime = detect_market_regime(
         direction,
         count,
@@ -279,7 +285,7 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
 
     campaign_text = format_campaign(campaign)
     wallet_memory_text = format_wallet_memory(wallet_memory)
-
+    wallet_behaviour_text = format_wallet_behaviour(wallet_behaviour)
 
     overall_opinion_text = (
         f"Bias: {overall_opinion['bias']}\n"
@@ -441,5 +447,6 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "source_consensus": source_consensus_text,
         "campaign": campaign_text,
         "wallet_memory": wallet_memory_text,
+        "wallet_behaviour": wallet_behaviour_text,
 
     }
