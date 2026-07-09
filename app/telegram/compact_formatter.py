@@ -40,6 +40,9 @@ def format_compact_signal(event, score_data, intel):
 <b>Wallet Behaviour:</b>
 {intel["wallet_behaviour"]}
 
+<b>Event Memory:</b>
+{intel["event_memory"]}
+
 <b>Smart Money Narrative:</b>
 {intel["smart_narrative"]}
 """.strip()
