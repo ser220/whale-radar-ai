@@ -11,7 +11,8 @@ from app.engine.market_intelligence import build_market_snapshot
 from app.engine.rotation import format_rotation
 from app.storage.last_signal import get_last_signal
 from app.telegram.formatter import format_signal
-
+from app.engine.outcome_engine import evaluate_open_predictions
+from app.engine.outcome_engine import evaluate_open_predictions
 
 
 load_dotenv()
@@ -193,6 +194,19 @@ async def details(update, context):
     await update.message.reply_text(text, parse_mode="HTML")
 
 
+async def outcomes(update, context):
+    result = evaluate_open_predictions()
+
+    text = (
+        "📊 <b>Outcome Evaluator</b>\n\n"
+        f"Checked: {result['checked']}\n"
+        f"Hits: {result['hits']}\n"
+        f"Hit Rate: {result['hit_rate']}%"
+    )
+
+    await update.message.reply_text(text, parse_mode="HTML")
+
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -208,6 +222,7 @@ def run_bot():
     app.add_handler(CommandHandler("pulse", pulse))
     app.add_handler(CommandHandler("rotation", rotation))
     app.add_handler(CommandHandler("details", details))
+    app.add_handler(CommandHandler("outcomes", outcomes))
 
     print("Telegram polling bot started...")
     app.run_polling()

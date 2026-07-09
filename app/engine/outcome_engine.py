@@ -52,3 +52,97 @@ def save_prediction(
 
     conn.commit()
     conn.close()
+from app.engine.live_market import get_price
+
+
+def evaluate_open_predictions(limit: int = 50) -> dict:
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    columns = [
+        ("current_price", "REAL"),
+        ("actual_move", "REAL"),
+        ("target_hit", "INTEGER DEFAULT 0"),
+        ("accuracy", "REAL"),
+        ("checked_at", "TEXT"),
+    ]
+
+    for name, column_type in columns:
+        try:
+            cur.execute(f"""
+                ALTER TABLE prediction_history
+                ADD COLUMN {name} {column_type}
+            """)
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+    cur.execute("""
+        SELECT *
+        FROM prediction_history
+        WHERE outcome_checked = 0
+        ORDER BY id DESC
+        LIMIT ?
+    """, (limit,))
+
+    rows = cur.fetchall()
+
+    checked = 0
+    hits = 0
+
+    for row in rows:
+        asset = row["asset"]
+        direction = row["direction"]
+        entry_price = row["entry_price"]
+        target_price = row["target_price"]
+        expected_move = row["expected_move"]
+
+        current_price = get_price(asset)
+
+        if not current_price or not entry_price:
+            continue
+
+        actual_move = ((current_price - entry_price) / entry_price) * 100
+
+        if direction == "bearish":
+            target_hit = current_price <= target_price
+        elif direction == "bullish":
+            target_hit = current_price >= target_price
+        else:
+            target_hit = False
+
+        if expected_move:
+            accuracy = max(0, 100 - abs(abs(actual_move) - abs(expected_move)) * 10)
+        else:
+            accuracy = 0
+
+        cur.execute("""
+            UPDATE prediction_history
+            SET current_price = ?,
+                actual_move = ?,
+                target_hit = ?,
+                accuracy = ?,
+                checked_at = ?,
+                outcome_checked = 1
+            WHERE id = ?
+        """, (
+            current_price,
+            actual_move,
+            1 if target_hit else 0,
+            accuracy,
+            datetime.utcnow().isoformat(),
+            row["id"],
+        ))
+
+        checked += 1
+        if target_hit:
+            hits += 1
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "checked": checked,
+        "hits": hits,
+        "hit_rate": round((hits / checked) * 100, 1) if checked else 0,
+    }
