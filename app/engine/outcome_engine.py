@@ -3,6 +3,7 @@ from datetime import datetime
 
 from app.config import DB_PATH
 from app.engine.module_learning import update_module_learning
+from app.engine.module_evaluator import evaluate_modules
 
 
 def save_prediction(
@@ -91,6 +92,8 @@ def evaluate_open_predictions(limit: int = 50) -> dict:
     checked = 0
     hits = 0
 
+    module_updates = []
+
     for row in rows:
         asset = row["asset"]
         direction = row["direction"]
@@ -139,22 +142,21 @@ def evaluate_open_predictions(limit: int = 50) -> dict:
         if target_hit:
             hits += 1
 
+        module_updates.append(
+            evaluate_modules(
+                prediction_hit=target_hit,
+                probability={},
+                campaign={},
+                wallet_behaviour={},
+                scenario={},
+            )
+        )
 
     conn.commit()
     conn.close()
 
-    modules = [
-        "Probability Engine",
-        "Risk Engine",
-        "Campaign Detector",
-        "Wallet Behaviour",
-        "Scenario Engine",
-        "Decision Engine",
-    ]
-
-    for _ in range(checked):
-        hit = hits > 0
-        for module in modules:
+    for updates in module_updates:
+        for module, hit in updates.items():
             update_module_learning(module, hit)
 
     return {
