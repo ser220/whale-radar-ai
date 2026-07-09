@@ -28,6 +28,8 @@ from app.engine.price_planner import build_price_plan
 from app.engine.live_market import get_price
 from app.engine.target_projection import project_target
 from app.engine.risk_engine import calculate_ai_risk
+from app.engine.source_consensus import calculate_source_consensus
+
 
 
 
@@ -57,8 +59,7 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
     wallet_profile = get_wallet_profile(wallet_name)
     wallet_ai = analyze_wallet(wallet_name, direction)
     wallet_rank = rank_wallet(wallet_name)
-
-
+    source_consensus = calculate_source_consensus(event)
     market_regime = detect_market_regime(
         direction,
         count,
@@ -262,6 +263,12 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         f"Rank: {wallet_rank['rank']}/100"
     )
 
+    source_consensus_text = (
+        f"Sources: {', '.join(source_consensus['sources'])}\n"
+        f"Confirmations: {source_consensus['count']}\n"
+        f"{source_consensus['label']}"
+    )
+
     overall_opinion_text = (
         f"Bias: {overall_opinion['bias']}\n"
         f"Risk: {overall_opinion['risk']}\n"
@@ -419,5 +426,6 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "price_plan": price_plan_text,
         "target_projection": target_projection_text,
         "ai_risk": ai_risk_text,
+        "source_consensus": source_consensus_text,
 
     }
