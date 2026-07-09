@@ -28,6 +28,9 @@ def format_compact_signal(event, score_data, intel):
 <b>AI Final Decision:</b>
 {intel["ai_decision"]}
 
+<b>Meta Decision:</b>
+{intel["meta_decision"]}
+
 <b>Adaptive Decision Shadow:</b>
 {intel["adaptive_decision_shadow"]}
 

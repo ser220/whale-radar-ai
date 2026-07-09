@@ -41,6 +41,7 @@ from app.engine.pattern_confidence import (
     calculate_pattern_confidence,
     format_pattern_confidence,
 )
+from app.engine.meta_decision import build_meta_decision, format_meta_decision
 
 
 
@@ -274,6 +275,20 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
     pattern_confidence_text = format_pattern_confidence(
         pattern_confidence
     )
+
+    meta_decision = build_meta_decision(
+        asset=event.asset.upper(),
+        direction=direction,
+        probability=probability,
+        campaign=campaign,
+        wallet_behaviour=wallet_behaviour,
+        market_regime=market_regime.get("regime", "Unknown"),
+        market_heat=market_heat.get("label", "Unknown"),
+        market_scenarios=market_scenarios,
+        ai_decision=ai_decision,
+    )
+
+    meta_decision_text = format_meta_decision(meta_decision)
 
     alert_priority = classify_alert_priority(signal_rating)
 
@@ -551,6 +566,7 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "market_heat_raw": market_heat,
         "pattern_confidence": pattern_confidence_text,
         "pattern_confidence_raw": pattern_confidence,
-
+        "meta_decision": meta_decision_text,
+        "meta_decision_raw": meta_decision,
 
     }
