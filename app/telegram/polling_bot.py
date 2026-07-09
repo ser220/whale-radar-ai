@@ -15,6 +15,7 @@ from app.engine.outcome_engine import evaluate_open_predictions
 from app.engine.outcome_engine import evaluate_open_predictions
 from app.engine.learning_engine import get_learning_stats, format_learning_stats
 from app.engine.module_learning import get_module_learning_stats, format_module_learning_stats
+from app.engine.adaptive_weights import get_adaptive_weights, format_adaptive_weights
 
 
 
@@ -224,6 +225,16 @@ async def modules(update, context):
     text = format_module_learning_stats(rows)
     await update.message.reply_text(text, parse_mode="HTML")
 
+async def weights(update, context):
+    w = get_adaptive_weights()
+
+    text = (
+        "⚖️ <b>Adaptive Weights</b>\n\n"
+        f"{format_adaptive_weights(w)}"
+    )
+
+    await update.message.reply_text(text, parse_mode="HTML")
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -242,6 +253,8 @@ def run_bot():
     app.add_handler(CommandHandler("outcomes", outcomes))
     app.add_handler(CommandHandler("learning", learning))
     app.add_handler(CommandHandler("modules", modules))
+    app.add_handler(CommandHandler("weights", weights))
+
 
     print("Telegram polling bot started...")
     app.run_polling()
