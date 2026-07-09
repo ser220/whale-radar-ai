@@ -13,6 +13,9 @@ from app.storage.last_signal import get_last_signal
 from app.telegram.formatter import format_signal
 from app.engine.outcome_engine import evaluate_open_predictions
 from app.engine.outcome_engine import evaluate_open_predictions
+from app.engine.learning_engine import get_learning_stats, format_learning_stats
+from app.engine.module_learning import get_module_learning_stats, format_module_learning_stats
+
 
 
 load_dotenv()
@@ -206,6 +209,20 @@ async def outcomes(update, context):
 
     await update.message.reply_text(text, parse_mode="HTML")
 
+async def learning(update, context):
+    stats = get_learning_stats()
+
+    text = (
+        "🧠 <b>Self Learning AI</b>\n\n"
+        f"{format_learning_stats(stats)}"
+    )
+
+    await update.message.reply_text(text, parse_mode="HTML")
+
+async def modules(update, context):
+    rows = get_module_learning_stats()
+    text = format_module_learning_stats(rows)
+    await update.message.reply_text(text, parse_mode="HTML")
 
 def run_bot():
     if not BOT_TOKEN:
@@ -223,6 +240,8 @@ def run_bot():
     app.add_handler(CommandHandler("rotation", rotation))
     app.add_handler(CommandHandler("details", details))
     app.add_handler(CommandHandler("outcomes", outcomes))
+    app.add_handler(CommandHandler("learning", learning))
+    app.add_handler(CommandHandler("modules", modules))
 
     print("Telegram polling bot started...")
     app.run_polling()

@@ -34,6 +34,7 @@ from app.engine.wallet_memory import analyze_wallet_memory, format_wallet_memory
 from app.engine.wallet_behaviour import analyze_wallet_behaviour, format_wallet_behaviour
 from app.engine.event_memory import analyze_event_memory, format_event_memory
 from app.engine.scenario_engine import build_market_scenarios, format_market_scenarios
+from app.engine.decision_engine import build_ai_decision, format_ai_decision
 
 
 
@@ -230,6 +231,15 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         ai_risk,
     )
 
+    ai_decision = build_ai_decision(
+        probability,
+        ai_risk,
+        campaign,
+        event_memory,
+        wallet_behaviour,
+        market_scenarios,
+    )
+
     alert_priority = classify_alert_priority(signal_rating)
 
     institutional_trend = get_institutional_trend_from_db(
@@ -407,6 +417,8 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
 
     market_scenarios_text = format_market_scenarios(market_scenarios)
 
+    ai_decision_text = format_ai_decision(ai_decision)
+
     asset_ai_text = (
         f"{event.asset}: {asset_ai['rating']}\n"
         f"Tier: {asset_ai['tier']}\n"
@@ -483,5 +495,6 @@ def explain_event(event: MarketEvent, score_data: dict) -> dict:
         "target_projection_raw": target_projection,
         "event_memory": event_memory_text,
         "market_scenarios": market_scenarios_text,
+        "ai_decision": ai_decision_text,
 
     }

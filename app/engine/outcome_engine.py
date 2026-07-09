@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime
 
 from app.config import DB_PATH
+from app.engine.module_learning import update_module_learning
 
 
 def save_prediction(
@@ -138,8 +139,23 @@ def evaluate_open_predictions(limit: int = 50) -> dict:
         if target_hit:
             hits += 1
 
+
     conn.commit()
     conn.close()
+
+    modules = [
+        "Probability Engine",
+        "Risk Engine",
+        "Campaign Detector",
+        "Wallet Behaviour",
+        "Scenario Engine",
+        "Decision Engine",
+    ]
+
+    for _ in range(checked):
+        hit = hits > 0
+        for module in modules:
+            update_module_learning(module, hit)
 
     return {
         "checked": checked,
