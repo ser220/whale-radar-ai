@@ -77,7 +77,8 @@ class ContextSimilarityEngine:
             }
 
         statistics = self.statistics_engine.build(
-            limit=5000
+            limit=5000,
+            exclude_prediction_id=prediction_id,
         )
 
         grouped = self._group_statistics(

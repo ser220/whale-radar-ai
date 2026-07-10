@@ -44,9 +44,11 @@ class ContextStatisticsEngine:
         context_key: Optional[str] = None,
         module: Optional[str] = None,
         limit: int = 5000,
+        exclude_prediction_id: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         rows = self._load_rows(
-            limit=limit
+            limit=limit,
+            exclude_prediction_id=exclude_prediction_id,
         )
 
         grouped: Dict[
@@ -106,57 +108,70 @@ class ContextStatisticsEngine:
     def _load_rows(
         self,
         limit: int,
+        exclude_prediction_id: Optional[int] = None,
     ) -> List[sqlite3.Row]:
+        query = """
+            SELECT
+                pc.prediction_id,
+                pc.asset,
+                pc.market_regime,
+                pc.market_heat,
+                pc.wallet_behaviour,
+                pc.asset_trend,
+                pc.btc_trend,
+                pc.eth_trend,
+                pc.volatility_regime,
+                pc.atr_percent,
+                pc.funding_rate,
+                pc.open_interest_change,
+                pc.session,
+                pc.weekday,
+                pc.hour_utc,
+                pc.captured_at,
+
+                lr.id AS recommendation_id,
+                lr.module,
+                lr.current_weight,
+                lr.suggested_change,
+                lr.suggested_weight,
+                lr.confidence,
+                lr.sample_count,
+                lr.average_module_score,
+                lr.status,
+                lr.created_at AS recommendation_created_at
+
+            FROM prediction_context AS pc
+
+            INNER JOIN learning_recommendations AS lr
+                ON lr.prediction_id = pc.prediction_id
+        """
+
+        parameters = []
+
+        if exclude_prediction_id is not None:
+            query += """
+                WHERE pc.prediction_id != ?
+            """
+            parameters.append(
+                int(exclude_prediction_id)
+            )
+
+        query += """
+            ORDER BY lr.id DESC
+            LIMIT ?
+        """
+
+        parameters.append(
+            max(int(limit), 1)
+        )
+
         with self._connect() as conn:
             rows = conn.execute(
-                """
-                SELECT
-                    pc.prediction_id,
-                    pc.asset,
-                    pc.market_regime,
-                    pc.market_heat,
-                    pc.wallet_behaviour,
-                    pc.asset_trend,
-                    pc.btc_trend,
-                    pc.eth_trend,
-                    pc.volatility_regime,
-                    pc.atr_percent,
-                    pc.funding_rate,
-                    pc.open_interest_change,
-                    pc.session,
-                    pc.weekday,
-                    pc.hour_utc,
-                    pc.captured_at,
-
-                    lr.id AS recommendation_id,
-                    lr.module,
-                    lr.current_weight,
-                    lr.suggested_change,
-                    lr.suggested_weight,
-                    lr.confidence,
-                    lr.sample_count,
-                    lr.average_module_score,
-                    lr.status,
-                    lr.created_at AS recommendation_created_at
-
-                FROM prediction_context AS pc
-
-                INNER JOIN learning_recommendations AS lr
-                    ON lr.prediction_id = pc.prediction_id
-
-                ORDER BY lr.id DESC
-                LIMIT ?
-                """,
-                (
-                    max(
-                        int(limit),
-                        1,
-                    ),
-                ),
+                query,
+                tuple(parameters),
             ).fetchall()
 
         return list(rows)
-
     @classmethod
     def _build_group(
         cls,
