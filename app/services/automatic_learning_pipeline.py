@@ -1,5 +1,8 @@
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional
 
+from app.services.prediction_context_capture import (
+    PredictionContextCaptureService,
+)
 from app.services.recommendation_pipeline import (
     RecommendationPipeline,
 )
@@ -14,16 +17,27 @@ class AutomaticLearningPipeline:
     - production weights are not changed;
     - errors are isolated per prediction;
     - duplicate recommendations are prevented;
-    - one failed prediction does not stop the others.
+    - one failed prediction does not stop the others;
+    - prediction context capture is idempotent.
     """
 
     def __init__(
         self,
-        recommendation_pipeline: RecommendationPipeline = None,
+        recommendation_pipeline: Optional[
+            RecommendationPipeline
+        ] = None,
+        context_capture: Optional[
+            PredictionContextCaptureService
+        ] = None,
     ) -> None:
         self.recommendation_pipeline = (
             recommendation_pipeline
             or RecommendationPipeline()
+        )
+
+        self.context_capture = (
+            context_capture
+            or PredictionContextCaptureService()
         )
 
     def run_for_prediction(
@@ -32,7 +46,17 @@ class AutomaticLearningPipeline:
     ) -> Dict[str, Any]:
         prediction_id = int(prediction_id)
 
+        context_result: Optional[
+            Dict[str, Any]
+        ] = None
+
         try:
+            context_result = (
+                self.context_capture.capture(
+                    prediction_id
+                )
+            )
+
             result = self.recommendation_pipeline.run(
                 prediction_id=prediction_id,
                 include_hold=True,
@@ -46,12 +70,19 @@ class AutomaticLearningPipeline:
                     "unknown",
                 ),
                 "saved": int(
-                    result.get("saved_count") or 0
+                    result.get(
+                        "saved_count"
+                    )
+                    or 0
                 ),
                 "skipped": int(
-                    result.get("skipped_count") or 0
+                    result.get(
+                        "skipped_count"
+                    )
+                    or 0
                 ),
                 "error": result.get("error"),
+                "context": context_result,
                 "mode": "Shadow only",
             }
 
@@ -62,6 +93,7 @@ class AutomaticLearningPipeline:
                 "saved": 0,
                 "skipped": 0,
                 "error": str(exc),
+                "context": context_result,
                 "mode": "Shadow only",
             }
 
@@ -79,6 +111,9 @@ class AutomaticLearningPipeline:
 
         saved_total = 0
         skipped_total = 0
+        contexts_saved = 0
+        contexts_existing = 0
+        context_errors = 0
 
         for prediction_id in ids:
             result = self.run_for_prediction(
@@ -89,6 +124,18 @@ class AutomaticLearningPipeline:
 
             saved_total += result["saved"]
             skipped_total += result["skipped"]
+
+            context = result.get("context") or {}
+            context_status = context.get("status")
+
+            if context_status == "saved":
+                contexts_saved += 1
+
+            elif context_status == "existing":
+                contexts_existing += 1
+
+            elif context_status == "error":
+                context_errors += 1
 
             if result["status"] == "error":
                 errors.append({
@@ -102,6 +149,9 @@ class AutomaticLearningPipeline:
             "error_count": len(errors),
             "saved_total": saved_total,
             "skipped_total": skipped_total,
+            "contexts_saved": contexts_saved,
+            "contexts_existing": contexts_existing,
+            "context_errors": context_errors,
             "processed": processed,
             "errors": errors,
             "mode": "Shadow only",
@@ -111,10 +161,6 @@ class AutomaticLearningPipeline:
 def run_learning_pipeline(
     prediction_id: int,
 ) -> Dict[str, Any]:
-    """
-    Convenience entry point for one prediction.
-    """
-
     pipeline = AutomaticLearningPipeline()
 
     return pipeline.run_for_prediction(
@@ -144,6 +190,18 @@ def format_automatic_learning(
         (
             "Recommendations Skipped: "
             f"{result.get('skipped_total', 0)}"
+        ),
+        (
+            "Contexts Saved: "
+            f"{result.get('contexts_saved', 0)}"
+        ),
+        (
+            "Contexts Existing: "
+            f"{result.get('contexts_existing', 0)}"
+        ),
+        (
+            "Context Errors: "
+            f"{result.get('context_errors', 0)}"
         ),
         f"Errors: {result.get('error_count', 0)}",
     ]
