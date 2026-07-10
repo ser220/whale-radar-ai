@@ -109,6 +109,8 @@ def evaluate_open_predictions(limit: int = 50) -> dict:
 
     module_updates = []
 
+    checked_prediction_ids = []
+
     for row in rows:
         asset = row["asset"]
         direction = row["direction"]
@@ -154,6 +156,10 @@ def evaluate_open_predictions(limit: int = 50) -> dict:
         ))
 
         checked += 1
+        checked_prediction_ids.append(
+            int(row["id"])
+        )
+
         if target_hit:
             hits += 1
 
@@ -174,8 +180,57 @@ def evaluate_open_predictions(limit: int = 50) -> dict:
         for module, hit in updates.items():
             update_module_learning(module, hit)
 
+    automatic_learning = {
+        "predictions_received": 0,
+        "processed_count": 0,
+        "error_count": 0,
+        "saved_total": 0,
+        "skipped_total": 0,
+        "processed": [],
+        "errors": [],
+        "mode": "Shadow only",
+    }
+
+    if checked_prediction_ids:
+        try:
+            from app.services.automatic_learning_pipeline import (
+                AutomaticLearningPipeline,
+            )
+
+            automatic_learning = (
+                AutomaticLearningPipeline()
+                .run_for_predictions(
+                    checked_prediction_ids
+                )
+            )
+
+        except Exception as exc:
+            automatic_learning = {
+                "predictions_received": len(
+                    checked_prediction_ids
+                ),
+                "processed_count": 0,
+                "error_count": 1,
+                "saved_total": 0,
+                "skipped_total": 0,
+                "processed": [],
+                "errors": [{
+                    "prediction_id": None,
+                    "error": str(exc),
+                }],
+                "mode": "Shadow only",
+            }
+
     return {
         "checked": checked,
         "hits": hits,
-        "hit_rate": round((hits / checked) * 100, 1) if checked else 0,
+        "hit_rate": (
+            round(
+                (hits / checked) * 100,
+                1,
+            )
+            if checked
+            else 0
+        ),
+        "automatic_learning": automatic_learning,
     }
