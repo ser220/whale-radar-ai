@@ -43,6 +43,13 @@ from app.repository.learning_recommendation_repository import (
     LearningRecommendationRepository,
 )
 
+from app.engine.adaptive_recommendation import (
+    AdaptiveRecommendationEngine,
+)
+from app.engine.learning_review_engine import (
+    LearningReviewEngine,
+    format_learning_review,
+)
 
 
 load_dotenv()
@@ -429,6 +436,67 @@ async def learning_stats(update, context):
         parse_mode="HTML",
     )
 
+async def learning_review(update, context):
+    try:
+        repo = LearningRecommendationRepository()
+
+        items = []
+
+        modules = [
+            "Probability Engine",
+            "Campaign Detector",
+            "Wallet Behaviour",
+            "Scenario Engine",
+            "Risk Engine",
+            "Decision Engine",
+        ]
+
+        for module in modules:
+            items.extend(
+                repo.list_by_module(
+                    module=module,
+                    limit=1000,
+                )
+            )
+
+        stats = LearningStatisticsEngine.build(
+            items
+        )
+
+        if not stats:
+            text = (
+                "🧠 <b>Learning Review</b>\n\n"
+                "No learning recommendations yet.\n"
+                "Mode: Shadow only"
+            )
+        else:
+            adaptive = (
+                AdaptiveRecommendationEngine.build(
+                    stats
+                )
+            )
+
+            reviews = LearningReviewEngine.build(
+                adaptive
+            )
+
+            text = format_learning_review(
+                reviews
+            )
+
+    except Exception as exc:
+        text = (
+            "🧠 <b>Learning Review</b>\n\n"
+            "Status: error\n"
+            f"Error: {str(exc)}\n"
+            "Mode: Shadow only"
+        )
+
+    await update.message.reply_text(
+        text,
+        parse_mode="HTML",
+    )
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -468,6 +536,13 @@ def run_bot():
         CommandHandler(
             "learning_stats",
             learning_stats,
+        )
+    )
+
+    app.add_handler(
+        CommandHandler(
+            "learning_review",
+            learning_review,
         )
     )
 
