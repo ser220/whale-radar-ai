@@ -25,6 +25,10 @@ from app.engine.calibration_engine import calculate_calibration_weights, format_
 from app.engine.calibration_audit import build_calibration_audit, format_calibration_audit
 from app.engine.maintenance_engine import build_maintenance_report, format_maintenance_report
 from app.engine.health_center import build_health_center, format_health_center
+from app.services.prediction_review_service import (
+    PredictionReviewService,
+    format_prediction_review,
+)
 
 
 
@@ -295,6 +299,30 @@ async def health(update, context):
     text = format_health_center(data)
     await update.message.reply_text(text, parse_mode="HTML")
 
+async def outcome(update, context):
+    if not context.args:
+        await update.message.reply_text(
+            "Usage: /outcome <prediction_id>"
+        )
+        return
+
+    try:
+        prediction_id = int(context.args[0])
+    except ValueError:
+        await update.message.reply_text(
+            "Prediction ID must be a number."
+        )
+        return
+
+    service = PredictionReviewService()
+    review = service.get_review(prediction_id)
+    text = format_prediction_review(review)
+
+    await update.message.reply_text(
+        text,
+        parse_mode="HTML",
+    )
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -322,6 +350,7 @@ def run_bot():
     app.add_handler(CommandHandler("audit", audit))
     app.add_handler(CommandHandler("maintenance", maintenance))
     app.add_handler(CommandHandler("health", health))
+    app.add_handler(CommandHandler("outcome", outcome))
 
     print("Telegram polling bot started...")
     app.run_polling()
