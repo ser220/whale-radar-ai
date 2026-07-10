@@ -57,6 +57,21 @@ from app.engine.weight_manager import (
     format_weight_manager_preview,
 )
 
+from app.engine.context_statistics import (
+    ContextStatisticsEngine,
+    format_context_statistics,
+)
+
+from app.engine.context_similarity import (
+    ContextSimilarityEngine,
+    format_context_similarity,
+)
+
+from app.services.confidence_boost_preview import (
+    ConfidenceBoostPreviewService,
+    format_confidence_boost_preview,
+)
+
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -620,6 +635,135 @@ async def weight_preview(update, context):
         parse_mode="HTML",
     )
 
+async def context_stats(update, context):
+    try:
+        engine = ContextStatisticsEngine()
+
+        context_key = None
+        module = None
+
+        if context.args:
+            context_key = context.args[0].strip()
+
+        if len(context.args) > 1:
+            module = " ".join(
+                context.args[1:]
+            ).strip()
+
+        rows = engine.build(
+            context_key=context_key,
+            module=module,
+            limit=5000,
+        )
+
+        text = format_context_statistics(
+            rows,
+            max_groups=20,
+        )
+
+    except Exception as exc:
+        text = (
+            "🌍 <b>Context Statistics</b>\n\n"
+            "Status: error\n"
+            f"Error: {str(exc)}\n"
+            "Mode: Shadow only"
+        )
+
+    await update.message.reply_text(
+        text,
+        parse_mode="HTML",
+    )
+
+
+async def similar_context(update, context):
+    if not context.args:
+        await update.message.reply_text(
+            "Usage: /similar_context <prediction_id>"
+        )
+        return
+
+    try:
+        prediction_id = int(
+            context.args[0]
+        )
+    except ValueError:
+        await update.message.reply_text(
+            "Prediction ID must be a number."
+        )
+        return
+
+    try:
+        engine = ContextSimilarityEngine()
+
+        result = engine.find_for_prediction(
+            prediction_id=prediction_id,
+            limit=5,
+        )
+
+        text = format_context_similarity(
+            result,
+            max_matches=5,
+        )
+
+    except Exception as exc:
+        text = (
+            "🧠 <b>Similar Context Search</b>\n\n"
+            "Status: error\n"
+            f"Prediction ID: {prediction_id}\n"
+            f"Error: {str(exc)}\n"
+            "Mode: Shadow only"
+        )
+
+    await update.message.reply_text(
+        text,
+        parse_mode="HTML",
+    )
+
+
+
+async def confidence_boost(update, context):
+    if not context.args:
+        await update.message.reply_text(
+            "Usage: /confidence_boost <prediction_id>"
+        )
+        return
+
+    try:
+        prediction_id = int(
+            context.args[0]
+        )
+    except ValueError:
+        await update.message.reply_text(
+            "Prediction ID must be a number."
+        )
+        return
+
+    try:
+        service = ConfidenceBoostPreviewService()
+
+        result = service.build(
+            prediction_id
+        )
+
+        text = format_confidence_boost_preview(
+            result
+        )
+
+    except Exception as exc:
+        text = (
+            "🧠 <b>Confidence Boost Preview</b>\n\n"
+            "Status: error\n"
+            f"Prediction ID: {prediction_id}\n"
+            f"Error: {str(exc)}\n"
+            "Mode: Shadow only"
+        )
+
+    await update.message.reply_text(
+        text,
+        parse_mode="HTML",
+    )
+
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -673,6 +817,27 @@ def run_bot():
         CommandHandler(
             "weight_preview",
             weight_preview,
+        )
+    )
+
+    app.add_handler(
+        CommandHandler(
+            "context_stats",
+            context_stats,
+        )
+    )
+
+    app.add_handler(
+        CommandHandler(
+            "similar_context",
+            similar_context,
+        )
+    )
+
+    app.add_handler(
+        CommandHandler(
+            "confidence_boost",
+            confidence_boost,
         )
     )
 
