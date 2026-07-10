@@ -30,6 +30,19 @@ from app.services.prediction_review_service import (
     format_prediction_review,
 )
 
+from app.services.recommendation_pipeline import (
+    RecommendationPipeline,
+    format_recommendation_pipeline,
+)
+
+from app.engine.learning_statistics import (
+    LearningStatisticsEngine,
+    format_learning_statistics,
+)
+from app.repository.learning_recommendation_repository import (
+    LearningRecommendationRepository,
+)
+
 
 
 load_dotenv()
@@ -323,6 +336,99 @@ async def outcome(update, context):
         parse_mode="HTML",
     )
 
+async def recommendations(update, context):
+    if not context.args:
+        await update.message.reply_text(
+            "Usage: /recommendations <prediction_id>"
+        )
+        return
+
+    try:
+        prediction_id = int(context.args[0])
+    except ValueError:
+        await update.message.reply_text(
+            "Prediction ID must be a number."
+        )
+        return
+
+    try:
+        pipeline = RecommendationPipeline()
+
+        result = pipeline.run(
+            prediction_id=prediction_id,
+            include_hold=True,
+            prevent_duplicates=True,
+        )
+
+        text = format_recommendation_pipeline(
+            result
+        )
+
+    except Exception as exc:
+        text = (
+            "🧠 <b>Recommendation Pipeline</b>\n\n"
+            "Status: error\n"
+            f"Prediction ID: {prediction_id}\n"
+            f"Error: {str(exc)}\n"
+            "Mode: Shadow only"
+        )
+
+    await update.message.reply_text(
+        text,
+        parse_mode="HTML",
+    )
+
+async def learning_stats(update, context):
+    try:
+        repo = LearningRecommendationRepository()
+
+        items = []
+
+        modules = [
+            "Probability Engine",
+            "Campaign Detector",
+            "Wallet Behaviour",
+            "Scenario Engine",
+            "Risk Engine",
+            "Decision Engine",
+        ]
+
+        for module in modules:
+            items.extend(
+                repo.list_by_module(
+                    module=module,
+                    limit=1000,
+                )
+            )
+
+        stats = LearningStatisticsEngine.build(
+            items
+        )
+
+        if not stats:
+            text = (
+                "🧠 <b>Learning Statistics</b>\n\n"
+                "No learning recommendations yet.\n"
+                "Mode: Shadow only"
+            )
+        else:
+            text = format_learning_statistics(
+                stats
+            )
+
+    except Exception as exc:
+        text = (
+            "🧠 <b>Learning Statistics</b>\n\n"
+            "Status: error\n"
+            f"Error: {str(exc)}\n"
+            "Mode: Shadow only"
+        )
+
+    await update.message.reply_text(
+        text,
+        parse_mode="HTML",
+    )
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -351,6 +457,19 @@ def run_bot():
     app.add_handler(CommandHandler("maintenance", maintenance))
     app.add_handler(CommandHandler("health", health))
     app.add_handler(CommandHandler("outcome", outcome))
+    app.add_handler(
+        CommandHandler(
+            "recommendations",
+            recommendations,
+        )
+    )    
+
+    app.add_handler(
+        CommandHandler(
+            "learning_stats",
+            learning_stats,
+        )
+    )
 
     print("Telegram polling bot started...")
     app.run_polling()
