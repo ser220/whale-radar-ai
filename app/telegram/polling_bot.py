@@ -72,6 +72,11 @@ from app.services.confidence_boost_preview import (
     format_confidence_boost_preview,
 )
 
+from app.services.decision_ab_comparison import (
+    DecisionABComparisonService,
+    format_decision_ab_comparison,
+)
+
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -764,6 +769,50 @@ async def confidence_boost(update, context):
     )
 
 
+
+async def decision_ab(update, context):
+    if not context.args:
+        await update.message.reply_text(
+            "Usage: /decision_ab <prediction_id>"
+        )
+        return
+
+    try:
+        prediction_id = int(
+            context.args[0]
+        )
+    except ValueError:
+        await update.message.reply_text(
+            "Prediction ID must be a number."
+        )
+        return
+
+    try:
+        service = DecisionABComparisonService()
+
+        result = service.compare(
+            prediction_id
+        )
+
+        text = format_decision_ab_comparison(
+            result
+        )
+
+    except Exception as exc:
+        text = (
+            "⚖️ <b>A/B Decision Comparison</b>\n\n"
+            "Status: error\n"
+            f"Prediction ID: {prediction_id}\n"
+            f"Error: {str(exc)}\n"
+            "Mode: Shadow only"
+        )
+
+    await update.message.reply_text(
+        text,
+        parse_mode="HTML",
+    )
+
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -838,6 +887,13 @@ def run_bot():
         CommandHandler(
             "confidence_boost",
             confidence_boost,
+        )
+    )
+
+    app.add_handler(
+        CommandHandler(
+            "decision_ab",
+            decision_ab,
         )
     )
 
