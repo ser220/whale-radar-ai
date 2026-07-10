@@ -52,6 +52,11 @@ from app.engine.learning_review_engine import (
 )
 
 
+from app.engine.weight_manager import (
+    WeightManager,
+    format_weight_manager_preview,
+)
+
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -232,16 +237,59 @@ async def details(update, context):
 
 
 async def outcomes(update, context):
-    result = evaluate_open_predictions()
+    try:
+        result = evaluate_open_predictions()
 
-    text = (
-        "📊 <b>Outcome Evaluator</b>\n\n"
-        f"Checked: {result['checked']}\n"
-        f"Hits: {result['hits']}\n"
-        f"Hit Rate: {result['hit_rate']}%"
+        automatic = result.get(
+            "automatic_learning"
+        ) or {}
+
+        text = (
+            "📊 <b>Outcome Evaluator</b>\n\n"
+            f"Checked: {result.get('checked', 0)}\n"
+            f"Hits: {result.get('hits', 0)}\n"
+            f"Hit Rate: {result.get('hit_rate', 0)}%\n\n"
+            "🧠 <b>Automatic Learning</b>\n"
+            f"Processed: "
+            f"{automatic.get('processed_count', 0)}\n"
+            f"Saved: "
+            f"{automatic.get('saved_total', 0)}\n"
+            f"Skipped: "
+            f"{automatic.get('skipped_total', 0)}\n"
+            f"Errors: "
+            f"{automatic.get('error_count', 0)}\n\n"
+            "Mode: Shadow only"
+        )
+
+        errors = automatic.get("errors") or []
+
+        if errors:
+            error_lines = [
+                "",
+                "<b>Learning Errors:</b>",
+            ]
+
+            for item in errors[:5]:
+                error_lines.append(
+                    f"• Prediction "
+                    f"{item.get('prediction_id')}: "
+                    f"{item.get('error')}"
+                )
+
+            text += "\n".join(error_lines)
+
+    except Exception as exc:
+        text = (
+            "📊 <b>Outcome Evaluator</b>\n\n"
+            "Status: error\n"
+            f"Error: {str(exc)}"
+        )
+
+    await update.message.reply_text(
+        text,
+        parse_mode="HTML",
     )
 
-    await update.message.reply_text(text, parse_mode="HTML")
 
 async def learning(update, context):
     stats = get_learning_stats()
@@ -497,6 +545,81 @@ async def learning_review(update, context):
         parse_mode="HTML",
     )
 
+async def weight_preview(update, context):
+    try:
+        repo = LearningRecommendationRepository()
+
+        items = []
+
+        modules = [
+            "Probability Engine",
+            "Campaign Detector",
+            "Wallet Behaviour",
+            "Scenario Engine",
+            "Risk Engine",
+            "Decision Engine",
+        ]
+
+        for module in modules:
+            items.extend(
+                repo.list_by_module(
+                    module=module,
+                    limit=1000,
+                )
+            )
+
+        stats = LearningStatisticsEngine.build(
+            items
+        )
+
+        if not stats:
+            text = (
+                "⚖️ <b>Weight Manager Preview</b>\n\n"
+                "No learning recommendations yet.\n"
+                "Mode: Shadow only"
+            )
+        else:
+            adaptive = (
+                AdaptiveRecommendationEngine.build(
+                    stats
+                )
+            )
+
+            reviews = LearningReviewEngine.build(
+                adaptive
+            )
+
+            manager = WeightManager()
+            preview = manager.preview(reviews)
+
+            text = format_weight_manager_preview(
+                preview
+            )
+
+            active = manager.get_active_version()
+
+            if active:
+                text += (
+                    "\n\n"
+                    "<b>Active Managed Version</b>\n"
+                    f"Version ID: {active['id']}\n"
+                    f"Source: {active['source']}\n"
+                    f"Created: {active['created_at']}"
+                )
+
+    except Exception as exc:
+        text = (
+            "⚖️ <b>Weight Manager Preview</b>\n\n"
+            "Status: error\n"
+            f"Error: {str(exc)}\n"
+            "Mode: Shadow only"
+        )
+
+    await update.message.reply_text(
+        text,
+        parse_mode="HTML",
+    )
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -543,6 +666,13 @@ def run_bot():
         CommandHandler(
             "learning_review",
             learning_review,
+        )
+    )
+
+    app.add_handler(
+        CommandHandler(
+            "weight_preview",
+            weight_preview,
         )
     )
 
