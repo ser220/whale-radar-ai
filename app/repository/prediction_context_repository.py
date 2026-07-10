@@ -30,6 +30,10 @@ class PredictionContextRepository:
 
                 asset TEXT,
 
+                market_type TEXT DEFAULT 'spot',
+                execution_exchange TEXT DEFAULT 'unknown',
+                instrument TEXT,
+
                 market_regime TEXT,
                 market_heat REAL,
                 wallet_behaviour TEXT,
@@ -55,7 +59,73 @@ class PredictionContextRepository:
             )
             """)
 
+            self._ensure_column(
+                conn,
+                "market_type",
+                "TEXT DEFAULT 'spot'",
+            )
+            self._ensure_column(
+                conn,
+                "execution_exchange",
+                "TEXT DEFAULT 'unknown'",
+            )
+            self._ensure_column(
+                conn,
+                "instrument",
+                "TEXT",
+            )
+
+            conn.execute(
+                """
+                UPDATE prediction_context
+                SET market_type = 'spot'
+                WHERE market_type IS NULL
+                   OR TRIM(market_type) = ''
+                """
+            )
+
+            conn.execute(
+                """
+                UPDATE prediction_context
+                SET execution_exchange = 'unknown'
+                WHERE execution_exchange IS NULL
+                   OR TRIM(execution_exchange) = ''
+                """
+            )
+
+            conn.execute(
+                """
+                UPDATE prediction_context
+                SET instrument = asset || '-SPOT'
+                WHERE instrument IS NULL
+                   OR TRIM(instrument) = ''
+                """
+            )
+
             conn.commit()
+
+    @staticmethod
+    def _ensure_column(
+        conn,
+        column_name: str,
+        definition: str,
+    ) -> None:
+        columns = {
+            row["name"]
+            for row in conn.execute(
+                "PRAGMA table_info(prediction_context)"
+            ).fetchall()
+        }
+
+        if column_name in columns:
+            return
+
+        conn.execute(
+            f"""
+            ALTER TABLE prediction_context
+            ADD COLUMN {column_name} {definition}
+            """
+        )
 
     def save(
         self,
@@ -70,6 +140,10 @@ class PredictionContextRepository:
 
                     prediction_id,
                     asset,
+
+                    market_type,
+                    execution_exchange,
+                    instrument,
 
                     market_regime,
                     market_heat,
@@ -97,14 +171,18 @@ class PredictionContextRepository:
                 )
                 VALUES(
                     ?,?,?,?,?,?,
-                    ?,?,?,?,
-                    ?,?,?,?,
-                    ?,?,?,?
+                    ?,?,?,?,?,?,
+                    ?,?,?,?,?,?,
+                    ?,?,?
                 )
                 """,
                 (
                     context.prediction_id,
                     context.asset,
+
+                    context.market_type,
+                    context.execution_exchange,
+                    context.instrument,
 
                     context.market_regime,
                     context.market_heat,
@@ -162,6 +240,19 @@ class PredictionContextRepository:
 
             prediction_id=row["prediction_id"],
             asset=row["asset"],
+
+            market_type=(
+                row["market_type"]
+                or "spot"
+            ),
+            execution_exchange=(
+                row["execution_exchange"]
+                or "unknown"
+            ),
+            instrument=(
+                row["instrument"]
+                or f"{row['asset']}-SPOT"
+            ),
 
             market_regime=row["market_regime"],
             market_heat=row["market_heat"],

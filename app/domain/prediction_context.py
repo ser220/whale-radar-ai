@@ -3,6 +3,11 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 
+ALLOWED_MARKET_TYPES = {
+    "spot",
+    "perpetual",
+}
+
 ALLOWED_TRENDS = {
     "bullish",
     "bearish",
@@ -33,6 +38,10 @@ ALLOWED_SESSIONS = {
 class PredictionContext:
     prediction_id: int
     asset: str
+
+    market_type: str = "spot"
+    execution_exchange: str = "unknown"
+    instrument: Optional[str] = None
 
     market_regime: str = "Unknown"
     market_heat: Optional[float] = None
@@ -77,6 +86,41 @@ class PredictionContext:
         if not self.asset:
             raise ValueError(
                 "asset cannot be empty."
+            )
+
+        self.market_type = self._normalize_choice(
+            self.market_type,
+            ALLOWED_MARKET_TYPES,
+            "spot",
+        )
+
+        self.execution_exchange = str(
+            self.execution_exchange
+            or "unknown"
+        ).strip().lower()
+
+        if not self.execution_exchange:
+            self.execution_exchange = "unknown"
+
+        if self.instrument is None:
+            if self.market_type == "perpetual":
+                self.instrument = (
+                    f"{self.asset}-USDT-SWAP"
+                )
+            else:
+                self.instrument = (
+                    f"{self.asset}-SPOT"
+                )
+        else:
+            self.instrument = str(
+                self.instrument
+            ).strip().upper()
+
+        if not self.instrument:
+            self.instrument = (
+                f"{self.asset}-SPOT"
+                if self.market_type == "spot"
+                else f"{self.asset}-USDT-SWAP"
             )
 
         self.market_regime = str(
@@ -230,6 +274,8 @@ class PredictionContext:
     @property
     def context_key(self) -> str:
         return "|".join([
+            self.market_type,
+            self.execution_exchange,
             self.market_regime.lower(),
             self.volatility_regime,
             self.asset_trend,
