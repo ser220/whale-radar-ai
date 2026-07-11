@@ -1,3 +1,4 @@
+import asyncio
 import os
 from dotenv import load_dotenv
 from telegram import Update
@@ -75,6 +76,11 @@ from app.services.confidence_boost_preview import (
 from app.services.decision_ab_comparison import (
     DecisionABComparisonService,
     format_decision_ab_comparison,
+)
+
+from app.services.unified_funding_hub import (
+    UnifiedFundingHubService,
+    format_unified_funding_hub,
 )
 
 load_dotenv()
@@ -813,6 +819,83 @@ async def decision_ab(update, context):
     )
 
 
+
+async def funding(update, context):
+    """
+    Shows unified perpetual funding intelligence.
+
+    Usage:
+        /funding BNB
+        /funding BTC
+        /funding NEARUSDT
+    """
+    if not context.args:
+        await update.message.reply_text(
+            "Usage: /funding <asset>\n"
+            "Examples:\n"
+            "/funding BNB\n"
+            "/funding BTC\n"
+            "/funding NEAR"
+        )
+        return
+
+    asset = str(
+        context.args[0]
+    ).strip().upper()
+
+    if not asset:
+        await update.message.reply_text(
+            "Asset cannot be empty."
+        )
+        return
+
+    status_message = (
+        await update.message.reply_text(
+            "🌐 Collecting perpetual funding data...\n"
+            f"Asset: {asset}\n"
+            "Sources: OKX, Binance, Gate.io, Bybit"
+        )
+    )
+
+    try:
+        hub = UnifiedFundingHubService(
+            history_limit=24,
+            timeout=12.0,
+        )
+
+        result = await asyncio.to_thread(
+            hub.build,
+            asset,
+        )
+
+        text = format_unified_funding_hub(
+            result
+        )
+
+    except Exception as exc:
+        error_text = str(exc)
+
+        error_text = (
+            error_text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )
+
+        text = (
+            "🌐 <b>Unified Perpetual Funding</b>\n\n"
+            f"Asset: {asset}\n"
+            "Status: error\n"
+            f"Error: {error_text}\n\n"
+            "Mode: Live read-only"
+        )
+
+    await status_message.edit_text(
+        text,
+        parse_mode="HTML",
+    )
+
+
 def run_bot():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN is missing in .env")
@@ -894,6 +977,13 @@ def run_bot():
         CommandHandler(
             "decision_ab",
             decision_ab,
+        )
+    )
+
+    app.add_handler(
+        CommandHandler(
+            "funding",
+            funding,
         )
     )
 
