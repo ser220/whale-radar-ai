@@ -36,20 +36,55 @@ class TradeReadinessEngine:
         evidence = decision.get("evidence") or []
         conflicts = decision.get("conflicts") or []
 
-        missing = list(
-            decision.get("missing_confirmations") or []
-        )
-
         active_sources = set(
             decision.get("active_sources") or []
         )
+
+        if not active_sources:
+            active_sources = {
+                str(row.get("source") or "").lower()
+                for row in evidence
+                if row.get("source")
+            }
 
         directional_sources = set(
             decision.get("directional_sources") or []
         )
 
+        if not directional_sources:
+            directional_sources = {
+                str(row.get("source") or "").lower()
+                for row in evidence
+                if row.get("direction")
+                in {
+                    "bullish",
+                    "bearish",
+                }
+                and row.get("source")
+            }
+
+        missing = list(
+            decision.get("missing_confirmations") or []
+        )
+
+        if not missing:
+            missing = self._derive_missing_confirmations(
+                active_sources=active_sources,
+                evidence=evidence,
+            )
+
         quality = self._bounded(
             snapshot_quality.get("overall")
+        )
+
+        # Alpha confidence cannot exceed the completeness
+        # of the synchronized market snapshot.
+        confidence = min(
+            confidence,
+            max(
+                quality,
+                45.0,
+            ),
         )
 
         support_ratio = self._support_ratio(
@@ -124,6 +159,23 @@ class TradeReadinessEngine:
             decision.get("risk") or "UNKNOWN"
         ).upper()
 
+        large_whale_event = any(
+            str(row.get("source") or "").lower()
+            == "arkham"
+            and float(row.get("value") or 0.0)
+            >= 20_000_000
+            for row in evidence
+        )
+
+        if (
+            large_whale_event
+            and risk in {
+                "UNKNOWN",
+                "LOW",
+            }
+        ):
+            risk = "MODERATE"
+
         velocity = self._velocity(
             readiness=readiness,
             missing_count=len(missing),
@@ -180,6 +232,69 @@ class TradeReadinessEngine:
             missing_confirmations=missing,
             reasons=reasons,
         )
+
+    @staticmethod
+    def _derive_missing_confirmations(
+        active_sources: set,
+        evidence: List[Dict[str, Any]],
+    ) -> List[str]:
+        missing = []
+
+        has_spot = bool(
+            {
+                "spot",
+                "spot_cvd",
+                "spot_echo",
+            }
+            & active_sources
+        )
+
+        has_oi_delta = (
+            "oi_delta" in active_sources
+        )
+
+        has_price_direction = any(
+            row.get("fact_type")
+            in {
+                "price_rising",
+                "price_falling",
+                "breakout",
+                "breakdown",
+            }
+            for row in evidence
+        )
+
+        if not has_spot:
+            missing.append(
+                "Spot confirmation"
+            )
+
+        if not has_oi_delta:
+            missing.append(
+                "OI direction"
+            )
+
+        if not has_price_direction:
+            missing.append(
+                "Price structure confirmation"
+            )
+
+        if "liquidations" not in active_sources:
+            missing.append(
+                "Liquidation confirmation"
+            )
+
+        if "history" not in active_sources:
+            missing.append(
+                "Historical confirmation"
+            )
+
+        if "campaign" not in active_sources:
+            missing.append(
+                "Campaign confirmation"
+            )
+
+        return missing
 
     @staticmethod
     def _readiness(
