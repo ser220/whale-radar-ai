@@ -79,6 +79,10 @@ class ContextSimilarityEngine:
         statistics = self.statistics_engine.build(
             limit=5000,
             exclude_prediction_id=prediction_id,
+            market_type=context.market_type,
+            execution_exchange=(
+                context.execution_exchange
+            ),
         )
 
         grouped = self._group_statistics(
@@ -160,6 +164,11 @@ class ContextSimilarityEngine:
                 "context_id": context.context_id,
                 "context_key": context.context_key,
                 "asset": context.asset,
+                "market_type": context.market_type,
+                "execution_exchange": (
+                    context.execution_exchange
+                ),
+                "instrument": context.instrument,
                 "market_regime": (
                     context.market_regime
                 ),

@@ -45,10 +45,14 @@ class ContextStatisticsEngine:
         module: Optional[str] = None,
         limit: int = 5000,
         exclude_prediction_id: Optional[int] = None,
+        market_type: Optional[str] = None,
+        execution_exchange: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         rows = self._load_rows(
             limit=limit,
             exclude_prediction_id=exclude_prediction_id,
+            market_type=market_type,
+            execution_exchange=execution_exchange,
         )
 
         grouped: Dict[
@@ -109,11 +113,16 @@ class ContextStatisticsEngine:
         self,
         limit: int,
         exclude_prediction_id: Optional[int] = None,
+        market_type: Optional[str] = None,
+        execution_exchange: Optional[str] = None,
     ) -> List[sqlite3.Row]:
         query = """
             SELECT
                 pc.prediction_id,
                 pc.asset,
+                pc.market_type,
+                pc.execution_exchange,
+                pc.instrument,
                 pc.market_regime,
                 pc.market_heat,
                 pc.wallet_behaviour,
@@ -147,13 +156,36 @@ class ContextStatisticsEngine:
         """
 
         parameters = []
+        conditions = []
 
         if exclude_prediction_id is not None:
-            query += """
-                WHERE pc.prediction_id != ?
-            """
+            conditions.append(
+                "pc.prediction_id != ?"
+            )
             parameters.append(
                 int(exclude_prediction_id)
+            )
+
+        if market_type is not None:
+            conditions.append(
+                "LOWER(COALESCE(pc.market_type, 'spot')) = ?"
+            )
+            parameters.append(
+                str(market_type).strip().lower()
+            )
+
+        if execution_exchange is not None:
+            conditions.append(
+                "LOWER(COALESCE(pc.execution_exchange, 'unknown')) = ?"
+            )
+            parameters.append(
+                str(execution_exchange).strip().lower()
+            )
+
+        if conditions:
+            query += (
+                "\nWHERE "
+                + " AND ".join(conditions)
             )
 
         query += """
@@ -281,6 +313,16 @@ class ContextStatisticsEngine:
             "module": module,
             "samples": samples,
 
+            "market_type": (
+                first["market_type"]
+                or "spot"
+            ),
+            "execution_exchange": (
+                first["execution_exchange"]
+                or "unknown"
+            ),
+            "instrument": first["instrument"],
+
             "market_regime": first[
                 "market_regime"
             ],
@@ -356,6 +398,8 @@ class ContextStatisticsEngine:
         row: sqlite3.Row,
     ) -> str:
         values = [
+            row["market_type"],
+            row["execution_exchange"],
             row["market_regime"],
             row["volatility_regime"],
             row["asset_trend"],
@@ -444,6 +488,8 @@ def format_context_statistics(
                 "────────────",
                 f"<b>{current_context}</b>",
                 (
+                    f"{row['market_type']} | "
+                    f"{row['execution_exchange']} | "
                     f"{row['market_regime']} | "
                     f"{row['volatility_regime']} | "
                     f"{row['session']}"
