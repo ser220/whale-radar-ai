@@ -3,11 +3,15 @@ from app.decision.evidence.fact_mapper import (
     MarketFactEvidenceMapper,
 )
 from app.decision.evidence.graph import EvidenceGraph
+from app.decision.evidence.graph_builder import (
+    EvidenceGraphBuilder,
+)
 from app.decision.evidence.node import EvidenceNode
 
 __all__ = [
     "EvidenceNode",
     "EvidenceEdge",
     "EvidenceGraph",
+    "EvidenceGraphBuilder",
     "MarketFactEvidenceMapper",
 ]
