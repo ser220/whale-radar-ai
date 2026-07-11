@@ -8,6 +8,9 @@ from typing import Any, Dict, List, Optional
 from app.domain.perpetual_exchange_registry import (
     PerpetualExchangeRegistry,
 )
+from app.services.bybit_perpetual_funding_snapshot import (
+    BybitPerpetualFundingSnapshotService,
+)
 from app.services.gate_perpetual_funding_snapshot import (
     GatePerpetualFundingSnapshotService,
 )
@@ -74,6 +77,12 @@ class UnifiedFundingHubService:
             ),
             "gate": (
                 GatePerpetualFundingSnapshotService(
+                    history_limit=self.history_limit,
+                    timeout=self.timeout,
+                )
+            ),
+            "bybit": (
+                BybitPerpetualFundingSnapshotService(
                     history_limit=self.history_limit,
                     timeout=self.timeout,
                 )
