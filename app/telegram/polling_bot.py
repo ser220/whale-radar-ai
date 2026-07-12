@@ -83,6 +83,14 @@ from app.services.unified_funding_hub import (
     format_unified_funding_hub,
 )
 
+
+from app.services.analyze_service import (
+    AnalyzeService,
+)
+from app.telegram.analyze_formatter import (
+    format_analyze_result,
+)
+
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -895,6 +903,87 @@ async def funding(update, context):
         parse_mode="HTML",
     )
 
+async def analyze(update, context):
+    """
+    Live Whale Radar Alpha analysis.
+
+    Usage:
+        /analyze BNB
+        /analyze BTC
+        /analyze ETH
+    """
+    if not context.args:
+        await update.message.reply_text(
+            "Usage: /analyze <asset>\n\n"
+            "Examples:\n"
+            "/analyze BNB\n"
+            "/analyze BTC\n"
+            "/analyze ETH\n"
+            "/analyze NEAR\n"
+            "/analyze SOL"
+        )
+        return
+
+    asset = str(
+        context.args[0]
+    ).strip().upper()
+
+    asset = (
+        asset
+        .replace("/USDT", "")
+        .replace("-USDT", "")
+        .replace("_USDT", "")
+    )
+
+    if asset.endswith("USDT"):
+        asset = asset[:-4]
+
+    status_message = (
+        await update.message.reply_text(
+            "🧠 Building live analysis...\n"
+            f"Asset: {asset}\n"
+            "Funding + OI + Arkham + Evidence"
+        )
+    )
+
+    try:
+        service = AnalyzeService(
+            execution_exchange="okx",
+            arkham_max_age_hours=48,
+        )
+
+        result = await asyncio.to_thread(
+            service.analyze,
+            asset,
+        )
+
+        text = format_analyze_result(
+            result
+        )
+
+    except Exception as exc:
+        error_text = (
+            str(exc)
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )
+
+        text = (
+            "🧠 <b>Whale Radar Alpha</b>\n\n"
+            f"<b>Asset:</b> {asset}\n"
+            "<b>Status:</b> error\n"
+            f"<b>Error:</b> {error_text}\n\n"
+            "No automatic execution."
+        )
+
+    await status_message.edit_text(
+        text,
+        parse_mode="HTML",
+        disable_web_page_preview=True,
+    )
+
+
 
 def run_bot():
     if not BOT_TOKEN:
@@ -984,6 +1073,14 @@ def run_bot():
         CommandHandler(
             "funding",
             funding,
+        )
+    )
+
+
+    app.add_handler(
+        CommandHandler(
+            "analyze",
+            analyze,
         )
     )
 

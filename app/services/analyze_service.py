@@ -18,6 +18,9 @@ from app.intelligence.snapshot_fact_builder import (
     SnapshotFactBuilder,
 )
 from app.models.event import MarketEvent
+from app.repository.analysis_state_repository import (
+    AnalysisStateRepository,
+)
 
 
 class AnalyzeService:
@@ -50,6 +53,9 @@ class AnalyzeService:
         self.graph_builder = EvidenceGraphBuilder()
         self.decision_engine = DecisionEngine()
         self.trade_engine = TradeReadinessEngine()
+        self.analysis_state_repository = (
+            AnalysisStateRepository()
+        )
 
         self.arkham_max_age_hours = max(
             int(arkham_max_age_hours),
@@ -72,6 +78,25 @@ class AnalyzeService:
             asset=normalized_asset,
             event=latest_event,
         )
+
+        live_market_blocks = {
+            "price": bool(snapshot.price),
+            "funding": bool(snapshot.funding),
+            "open_interest": bool(
+                snapshot.open_interest
+            ),
+        }
+
+        available_market_blocks = sum(
+            live_market_blocks.values()
+        )
+
+        if available_market_blocks < 2:
+            raise ValueError(
+                f"{normalized_asset} is unavailable or has "
+                "insufficient data on connected perpetual markets. "
+                "Checked: OKX, Binance, Gate.io, Bybit."
+            )
 
         facts = self.fact_builder.build(
             snapshot
@@ -102,6 +127,26 @@ class AnalyzeService:
                 snapshot.quality.to_dict()
             ),
             snapshot_id=snapshot.snapshot_id,
+        )
+
+        trade_payload = trade.to_dict()
+
+        previous_state = (
+            self.analysis_state_repository
+            .get_latest(
+                normalized_asset
+            )
+        )
+
+        change = self._build_change(
+            previous_state=previous_state,
+            current_trade=trade_payload,
+        )
+
+        self.analysis_state_repository.save(
+            asset=normalized_asset,
+            snapshot_id=snapshot.snapshot_id,
+            trade=trade_payload,
         )
 
         return {
@@ -148,9 +193,115 @@ class AnalyzeService:
                 ],
             },
             "decision": decision,
-            "trade": trade.to_dict(),
+            "trade": trade_payload,
+            "change": change,
             "mode": "Alpha decision support",
             "production_influence": False,
+        }
+
+    @staticmethod
+    def _build_change(
+        previous_state: Optional[Dict[str, Any]],
+        current_trade: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        if not previous_state:
+            return {
+                "available": False,
+                "reason": "first_analysis",
+            }
+
+        previous_trade = (
+            previous_state.get("payload")
+            or {}
+        )
+
+        previous_readiness = float(
+            previous_trade.get(
+                "trade_readiness"
+            )
+            or 0.0
+        )
+
+        current_readiness = float(
+            current_trade.get(
+                "trade_readiness"
+            )
+            or 0.0
+        )
+
+        previous_confidence = float(
+            previous_trade.get(
+                "confidence"
+            )
+            or 0.0
+        )
+
+        current_confidence = float(
+            current_trade.get(
+                "confidence"
+            )
+            or 0.0
+        )
+
+        previous_missing = set(
+            previous_trade.get(
+                "missing_confirmations"
+            )
+            or []
+        )
+
+        current_missing = set(
+            current_trade.get(
+                "missing_confirmations"
+            )
+            or []
+        )
+
+        return {
+            "available": True,
+            "previous_analyzed_at": (
+                previous_state.get(
+                    "analyzed_at"
+                )
+            ),
+            "previous_status": (
+                previous_trade.get("status")
+            ),
+            "current_status": (
+                current_trade.get("status")
+            ),
+            "status_changed": (
+                previous_trade.get("status")
+                != current_trade.get("status")
+            ),
+            "previous_bias": (
+                previous_trade.get("bias")
+            ),
+            "current_bias": (
+                current_trade.get("bias")
+            ),
+            "bias_changed": (
+                previous_trade.get("bias")
+                != current_trade.get("bias")
+            ),
+            "readiness_change": round(
+                current_readiness
+                - previous_readiness,
+                1,
+            ),
+            "confidence_change": round(
+                current_confidence
+                - previous_confidence,
+                1,
+            ),
+            "new_confirmations": sorted(
+                previous_missing
+                - current_missing
+            ),
+            "lost_confirmations": sorted(
+                current_missing
+                - previous_missing
+            ),
         }
 
     def _load_latest_event(
