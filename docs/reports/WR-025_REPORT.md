@@ -168,19 +168,54 @@ engine.
 ## Git information
 
 - Branch: `wr-025-market-state-engine`
-- Implementation commit: recorded after successful verification
-- Push: recorded after the feature branch is pushed
+- Implementation commit: `be5b3ea42264cd469bce7c0484e666e7d63e0063`
+- Push: SUCCESS — `git push -u origin wr-025-market-state-engine`
+- Remote branch: `origin/wr-025-market-state-engine`
 
 ## Branch diff and commit list
 
-The complete final output of the following commands is recorded after commit:
+The complete implementation snapshot relative to reviewed WR-024.5 base
+`94d65b4` is:
 
 ```text
-git diff --stat 94d65b4...HEAD
-git diff --name-status 94d65b4...HEAD
-git log --oneline 94d65b4..HEAD
-git status --short
+app/intelligence/__init__.py                       |   3 +
+app/intelligence/market_state/README.md            |  88 +++++
+app/intelligence/market_state/__init__.py          |   6 +
+app/intelligence/market_state/engine.py            | 422 +++++++++++++++++++++
+app/intelligence/market_state/policy.py            |  60 +++
+.../adr/ADR-WR-025-market-state-engine.md          | 129 +++++++
+docs/reports/WR-025_REPORT.md                      | 197 ++++++++++
+docs/specs/WR-025-market-state-engine.md           | 214 +++++++++++
+test_market_state_engine.py                        | 317 ++++++++++++++++
+9 files changed, 1436 insertions(+)
 ```
+
+```text
+M app/intelligence/__init__.py
+A app/intelligence/market_state/README.md
+A app/intelligence/market_state/__init__.py
+A app/intelligence/market_state/engine.py
+A app/intelligence/market_state/policy.py
+A docs/architecture/adr/ADR-WR-025-market-state-engine.md
+A docs/reports/WR-025_REPORT.md
+A docs/specs/WR-025-market-state-engine.md
+A test_market_state_engine.py
+```
+
+```text
+be5b3ea WR-025 add market state engine
+```
+
+Status immediately after the implementation push:
+
+```text
+?? docs/chat_archive/
+```
+
+The remaining untracked archive is unrelated user data and is not staged or
+committed. The report-only metadata commit that records the implementation hash
+and push result does not change code, policy, tests, or architecture; its hash
+is reported in the final completion response.
 
 ## Breaking changes
 
