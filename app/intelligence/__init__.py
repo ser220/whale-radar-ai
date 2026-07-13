@@ -9,6 +9,7 @@ from app.intelligence.contracts import (
     MarketState,
     TrendState,
 )
+from app.intelligence.market_state import MarketStateEngine, SynthesisPolicy
 
 __all__ = [
     "DecisionState",
@@ -17,5 +18,7 @@ __all__ = [
     "ExpertRegistry",
     "LifecycleState",
     "MarketState",
+    "MarketStateEngine",
+    "SynthesisPolicy",
     "TrendState",
 ]
