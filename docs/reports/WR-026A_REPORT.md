@@ -133,20 +133,66 @@ files are not modified and do not import the observation package.
 ## Git information
 
 - Branch: `wr-026a-observation-contracts`
-- Commit: recorded after successful verification
-- Push: recorded after the feature branch is pushed
+- Implementation commit: `e654c10a66b449babb04885ba1e7305d5a8a07b9`
+- Push: SUCCESS — `git push -u origin wr-026a-observation-contracts`
+- Remote branch: `origin/wr-026a-observation-contracts`
 
 ## Full branch diff stat
 
-Recorded after the verified commit.
+Implementation snapshot relative to `origin/main` (`3162fb2`):
+
+```text
+app/intelligence/observations/README.md            | 117 +++++
+app/intelligence/observations/__init__.py          |  31 ++
+app/intelligence/observations/base.py              | 197 +++++++++
+app/intelligence/observations/enums.py             |  38 ++
+app/intelligence/observations/funding.py           |  92 ++++
+app/intelligence/observations/liquidity.py         | 105 +++++
+app/intelligence/observations/momentum.py          |  86 ++++
+app/intelligence/observations/open_interest.py     |  83 ++++
+app/intelligence/observations/structure.py         | 112 +++++
+app/intelligence/observations/trend.py             |  97 +++++
+.../adr/ADR-WR-026A-observation-contracts.md       | 150 +++++++
+docs/reports/WR-026A_REPORT.md                     | 163 +++++++
+docs/specs/WR-026A-observation-contracts.md        | 230 ++++++++++
+test_observation_contracts.py                      | 477 +++++++++++++++++++++
+14 files changed, 1978 insertions(+)
+```
 
 ## Full branch file list
 
-Recorded after the verified commit.
+```text
+A app/intelligence/observations/README.md
+A app/intelligence/observations/__init__.py
+A app/intelligence/observations/base.py
+A app/intelligence/observations/enums.py
+A app/intelligence/observations/funding.py
+A app/intelligence/observations/liquidity.py
+A app/intelligence/observations/momentum.py
+A app/intelligence/observations/open_interest.py
+A app/intelligence/observations/structure.py
+A app/intelligence/observations/trend.py
+A docs/architecture/adr/ADR-WR-026A-observation-contracts.md
+A docs/reports/WR-026A_REPORT.md
+A docs/specs/WR-026A-observation-contracts.md
+A test_observation_contracts.py
+```
 
 ## Branch commits
 
-Recorded after the verified commit.
+```text
+e654c10 WR-026A add observation contracts
+```
+
+Status immediately after the implementation push:
+
+```text
+?? docs/chat_archive/
+```
+
+The untracked archive remains unrelated and excluded. The report-only metadata
+commit that records the implementation hash and push result changes no code or
+architecture; its hash is returned in the final response.
 
 ## Breaking changes
 
