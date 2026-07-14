@@ -1,4 +1,5 @@
 from html import escape
+import math
 from typing import Any, Dict, List
 
 
@@ -9,6 +10,149 @@ STATUS_STYLE = {
     "READY": ("🔵", "READY"),
     "ACTION": ("🟢", "ACTION"),
 }
+
+SHADOW_SEPARATOR = "━━━━━━━━━━━━━━━━━━"
+SHADOW_DIRECTIONS = {
+    "BULLISH",
+    "BEARISH",
+    "NEUTRAL",
+}
+SHADOW_AGREEMENT = {
+    "HIGH": "High",
+    "MEDIUM": "Medium",
+    "LOW": "Low",
+}
+
+
+def is_shadow_preview_enabled(
+    value: Any,
+) -> bool:
+    """Parse the explicit opt-in feature flag without changing defaults."""
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    return str(value).strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+        "enabled",
+    }
+
+
+def _shadow_direction(
+    value: Any,
+) -> str:
+    normalized = str(value or "").strip().upper()
+    if normalized in SHADOW_DIRECTIONS:
+        return normalized
+    return "Unavailable"
+
+
+def _shadow_confidence(
+    value: Any,
+) -> str:
+    if isinstance(value, bool):
+        return "Unavailable"
+    try:
+        normalized = float(value)
+    except (TypeError, ValueError):
+        return "Unavailable"
+    if not math.isfinite(normalized) or not 0.0 <= normalized <= 100.0:
+        return "Unavailable"
+    return f"{normalized:.1f}%"
+
+
+def _shadow_expert_lines(
+    label: str,
+    payload: Any,
+) -> List[str]:
+    if not isinstance(payload, dict):
+        return []
+    return [
+        f"<b>{label}</b>",
+        (
+            "Direction: "
+            + escape(
+                _shadow_direction(
+                    payload.get("direction")
+                )
+            )
+        ),
+        (
+            "Confidence: "
+            + escape(
+                _shadow_confidence(
+                    payload.get("confidence")
+                )
+            )
+        ),
+    ]
+
+
+def format_shadow_intelligence(
+    shadow: Any,
+) -> str:
+    """Format read-only shadow facts and ignore all decision-like fields."""
+    lines = [
+        SHADOW_SEPARATOR,
+        "🧠 <b>Shadow Intelligence</b>",
+    ]
+
+    if not isinstance(shadow, dict):
+        lines.extend([
+            "Unavailable",
+            SHADOW_SEPARATOR,
+        ])
+        return "\n".join(lines)
+
+    opinions = shadow.get("opinions")
+    if not isinstance(opinions, dict):
+        lines.extend([
+            "Unavailable",
+            SHADOW_SEPARATOR,
+        ])
+        return "\n".join(lines)
+
+    legacy_lines = _shadow_expert_lines(
+        "Legacy Expert",
+        opinions.get("legacy_intelligence"),
+    )
+    trend_lines = _shadow_expert_lines(
+        "Trend Expert",
+        opinions.get("trend_expert"),
+    )
+
+    if not legacy_lines and not trend_lines:
+        lines.extend([
+            "Unavailable",
+            SHADOW_SEPARATOR,
+        ])
+        return "\n".join(lines)
+
+    if legacy_lines:
+        lines.extend([
+            "",
+            *legacy_lines,
+        ])
+    if trend_lines:
+        lines.extend([
+            "",
+            *trend_lines,
+        ])
+
+    agreement = SHADOW_AGREEMENT.get(
+        str(shadow.get("agreement") or "").strip().upper(),
+        "Unavailable",
+    )
+    lines.extend([
+        "",
+        f"<b>Agreement:</b> {agreement}",
+        "<b>Shadow Status:</b> Experimental",
+        SHADOW_SEPARATOR,
+    ])
+    return "\n".join(lines)
 
 
 def _number(
@@ -56,6 +200,8 @@ def _top_reasons(
 
 def format_analyze_result(
     result: Dict[str, Any],
+    *,
+    shadow_enabled: bool = False,
 ) -> str:
     trade = result.get("trade") or {}
     quality = (
@@ -359,4 +505,13 @@ def format_analyze_result(
         "No automatic execution.",
     ])
 
-    return "\n".join(lines)
+    formatted = "\n".join(lines)
+    if not shadow_enabled:
+        return formatted
+    return (
+        formatted
+        + "\n\n"
+        + format_shadow_intelligence(
+            result.get("shadow_intelligence")
+        )
+    )
