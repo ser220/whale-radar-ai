@@ -1,0 +1,68 @@
+"""Enumerations for the Market Situation runtime contracts."""
+
+from enum import Enum
+
+
+class SituationStage(str, Enum):
+    """Explicit lifecycle position of a market situation."""
+
+    DETECTED = "DETECTED"
+    OBSERVED = "OBSERVED"
+    ANALYZED = "ANALYZED"
+    CORRELATED = "CORRELATED"
+    DECISION_SUPPORT = "DECISION_SUPPORT"
+    OUTCOME = "OUTCOME"
+    LEARNING = "LEARNING"
+    MEMORY = "MEMORY"
+
+
+class SituationHealth(str, Enum):
+    """Explicitly assigned health of the current situation version."""
+
+    HEALTHY = "HEALTHY"
+    WEAKENING = "WEAKENING"
+    CONTRADICTED = "CONTRADICTED"
+    INVALIDATED = "INVALIDATED"
+    UNKNOWN = "UNKNOWN"
+
+
+class TimelineEventType(str, Enum):
+    """Kinds of facts that may be recorded in a situation timeline."""
+
+    DETECTION = "DETECTION"
+    OBSERVATION_ATTACHED = "OBSERVATION_ATTACHED"
+    EXPERT_OPINION_ATTACHED = "EXPERT_OPINION_ATTACHED"
+    CORRELATION_ATTACHED = "CORRELATION_ATTACHED"
+    MARKET_STATE_ATTACHED = "MARKET_STATE_ATTACHED"
+    DECISION_CONTEXT_ATTACHED = "DECISION_CONTEXT_ATTACHED"
+    EXPECTATION_CREATED = "EXPECTATION_CREATED"
+    EXPECTATION_UPDATED = "EXPECTATION_UPDATED"
+    EXPECTATION_FULFILLED = "EXPECTATION_FULFILLED"
+    EXPECTATION_MISSING = "EXPECTATION_MISSING"
+    EXPECTATION_CONTRADICTED = "EXPECTATION_CONTRADICTED"
+    EXPECTATION_EXPIRED = "EXPECTATION_EXPIRED"
+    HEALTH_CHANGED = "HEALTH_CHANGED"
+    OUTCOME_RECORDED = "OUTCOME_RECORDED"
+    LEARNING_RECORDED = "LEARNING_RECORDED"
+    MEMORY_STORED = "MEMORY_STORED"
+
+
+class ExpectationStatus(str, Enum):
+    """Explicit evaluation state of an expectation."""
+
+    PENDING = "PENDING"
+    FULFILLED = "FULFILLED"
+    MISSING = "MISSING"
+    CONTRADICTED = "CONTRADICTED"
+    EXPIRED = "EXPIRED"
+    CANCELLED = "CANCELLED"
+
+
+class ExpectationViolationType(str, Enum):
+    """Structural classification of an expectation gap."""
+
+    NONE = "NONE"
+    UNEXPECTED_EVENT = "UNEXPECTED_EVENT"
+    MISSING_EXPECTED_EVENT = "MISSING_EXPECTED_EVENT"
+    BOTH = "BOTH"
+    UNKNOWN = "UNKNOWN"
