@@ -89,11 +89,19 @@ from app.services.analyze_service import (
 )
 from app.telegram.analyze_formatter import (
     format_analyze_result,
+    is_shadow_preview_enabled,
 )
 
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+SHADOW_INTELLIGENCE_PREVIEW_ENABLED = (
+    is_shadow_preview_enabled(
+        os.getenv(
+            "SHADOW_INTELLIGENCE_PREVIEW_ENABLED"
+        )
+    )
+)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -958,7 +966,10 @@ async def analyze(update, context):
         )
 
         text = format_analyze_result(
-            result
+            result,
+            shadow_enabled=(
+                SHADOW_INTELLIGENCE_PREVIEW_ENABLED
+            ),
         )
 
     except Exception as exc:
