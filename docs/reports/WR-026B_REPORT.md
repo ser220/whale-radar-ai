@@ -167,12 +167,52 @@ Expert.
 ## Git information
 
 - Branch: `wr-026b-trend-expert`
-- Implementation commit: recorded after successful verification
-- Push: recorded after feature-branch push
+- Implementation commit: `703754a04ee5666ca40d4318fd4e0ae66c969e5e`
+- Push: SUCCESS — `git push -u origin wr-026b-trend-expert`
+- Remote branch: `origin/wr-026b-trend-expert`
 
 ## Full branch diff
 
-Recorded after the verified implementation commit.
+Implementation snapshot relative to `origin/main` (`6a3664f`):
+
+```text
+app/intelligence/experts/__init__.py              |   5 +
+app/intelligence/experts/trend/README.md          | 159 ++++++
+app/intelligence/experts/trend/__init__.py        |   6 +
+app/intelligence/experts/trend/expert.py          | 661 ++++++++++++++++++++++
+app/intelligence/experts/trend/policy.py          | 105 ++++
+docs/architecture/adr/ADR-WR-026B-trend-expert.md | 132 +++++
+docs/reports/WR-026B_REPORT.md                    | 190 +++++++
+docs/specs/WR-026B-trend-expert.md                | 306 ++++++++++
+test_trend_expert.py                              | 494 ++++++++++++++++
+9 files changed, 2058 insertions(+)
+```
+
+```text
+A app/intelligence/experts/__init__.py
+A app/intelligence/experts/trend/README.md
+A app/intelligence/experts/trend/__init__.py
+A app/intelligence/experts/trend/expert.py
+A app/intelligence/experts/trend/policy.py
+A docs/architecture/adr/ADR-WR-026B-trend-expert.md
+A docs/reports/WR-026B_REPORT.md
+A docs/specs/WR-026B-trend-expert.md
+A test_trend_expert.py
+```
+
+```text
+703754a WR-026B add trend expert
+```
+
+Status immediately after implementation push:
+
+```text
+?? docs/chat_archive/
+```
+
+The archive remains unrelated and excluded. The report-only metadata commit
+that records the implementation hash and push result changes no code, policy,
+tests, or architecture; its hash is returned in the final response.
 
 ## Breaking changes
 
