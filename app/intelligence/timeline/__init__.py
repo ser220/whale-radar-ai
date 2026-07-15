@@ -13,6 +13,10 @@ from app.intelligence.timeline.early_bird_adapter import (
     deterministic_run_local_ids,
     format_early_bird_timeline,
 )
+from app.intelligence.timeline.identity import (
+    SituationIdentityEngine,
+    SituationIdentityResult,
+)
 from app.intelligence.timeline.timeline import append_timeline_entry
 
 
@@ -22,6 +26,8 @@ __all__ = [
     "EarlyBirdTimelineResult",
     "MarketSituationTimeline",
     "MarketSituationTimelineEntry",
+    "SituationIdentityEngine",
+    "SituationIdentityResult",
     "SituationDNA",
     "append_timeline_entry",
     "build_timelines_from_scan",
