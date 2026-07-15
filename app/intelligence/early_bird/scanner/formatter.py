@@ -46,6 +46,11 @@ def format_scan_result(result: EarlyBirdScanResult) -> str:
     for item in result.items:
         assessment = item.assessment
         build_result = item.build_result
+        funding = build_result.factor_values["funding_divergence"]
+        funding_text = funding.availability.value
+        if funding.score is not None:
+            funding_text += " ({0:.2f})".format(funding.score)
+        funding_venues = funding.metadata.get("used_venues") or ()
         lines.extend(
             (
                 "",
@@ -69,6 +74,8 @@ def format_scan_result(result: EarlyBirdScanResult) -> str:
                 "   Error factors: {0}".format(
                     _names(build_result.error_factors)
                 ),
+                "   Funding: {0}".format(funding_text),
+                "   Funding venues: {0}".format(_names(funding_venues)),
                 "   Reasons: {0}".format(
                     " | ".join(assessment.reasons[:3]) or "none"
                 ),

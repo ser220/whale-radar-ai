@@ -27,6 +27,11 @@ from app.intelligence.early_bird.scanner.candle_factors import (
     SOURCE_NAME,
     timeframe_seconds,
 )
+from app.intelligence.early_bird.scanner.funding_factor import (
+    FRESHNESS_WINDOW as FUNDING_FRESHNESS_WINDOW,
+    FundingDivergenceFactor,
+)
+from app.services.unified_funding_hub import UnifiedFundingHubService
 from app.sources.binance_candle_source import BinanceCandleSource
 
 
@@ -219,6 +224,8 @@ class EarlyBirdScanner:
         self,
         candle_source: Any = None,
         factor_calculator: Any = None,
+        funding_service: Any = None,
+        funding_calculator: Any = None,
         candidate_builder: Any = None,
         engine: Any = None,
     ) -> None:
@@ -229,6 +236,16 @@ class EarlyBirdScanner:
             CandleFactorCalculator()
             if factor_calculator is None
             else factor_calculator
+        )
+        self._funding_service = (
+            UnifiedFundingHubService(timeout=8.0)
+            if funding_service is None
+            else funding_service
+        )
+        self._funding_calculator = (
+            FundingDivergenceFactor()
+            if funding_calculator is None
+            else funding_calculator
         )
         self._candidate_builder = (
             EarlyBirdCandidateBuilder()
@@ -291,6 +308,20 @@ class EarlyBirdScanner:
         )
 
         for asset in requested_assets:
+            try:
+                funding_result = self._funding_service.build(asset)
+                funding_factor = self._funding_calculator.build(
+                    asset,
+                    funding_result,
+                    evaluated_at=evaluated_at,
+                )
+            except Exception as exc:
+                funding_factor = self._funding_calculator.error(
+                    asset,
+                    exc,
+                    evaluated_at=evaluated_at,
+                )
+
             if asset == "BTC":
                 candles = cache["BTC"]
                 if benchmark_error is not None:
@@ -335,13 +366,7 @@ class EarlyBirdScanner:
                             "OI change is not implemented from candle data."
                         ),
                     ),
-                    EarlyBirdFactorValue(
-                        "funding_divergence",
-                        FactorAvailability.MISSING,
-                        reason=(
-                            "No funding input is part of this candle scan."
-                        ),
-                    ),
+                    funding_factor,
                     EarlyBirdFactorValue(
                         "liquidity_event",
                         FactorAvailability.UNSUPPORTED,
@@ -360,12 +385,13 @@ class EarlyBirdScanner:
                     candidate_id=candidate_id,
                     asset=asset,
                     observed_at=evaluated_at,
-                    source="binance_spot_candle_scanner",
+                    source="early_bird_public_market_scanner",
                     metadata={
                         "timeframe": normalized_timeframe,
                         "requested_candle_count": normalized_candle_count,
                         "received_candle_count": len(candles),
                         "benchmark": "BTCUSDT",
+                        "funding_source": "unified_funding_hub",
                     },
                 )
                 build_results[candidate_id] = build_result
@@ -415,6 +441,9 @@ class EarlyBirdScanner:
                 "result_limit": normalized_limit,
                 "benchmark": "BTCUSDT",
                 "benchmark_error": benchmark_error,
+                "funding_freshness_window_seconds": int(
+                    FUNDING_FRESHNESS_WINDOW.total_seconds()
+                ),
                 "mode": "read-only-local-experimental",
             },
         )

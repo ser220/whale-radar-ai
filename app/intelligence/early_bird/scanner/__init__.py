@@ -10,6 +10,10 @@ from app.intelligence.early_bird.scanner.scanner import (
     EarlyBirdScanResult,
 )
 from app.intelligence.early_bird.scanner.formatter import format_scan_result
+from app.intelligence.early_bird.scanner.funding_factor import (
+    FRESHNESS_WINDOW as FUNDING_FRESHNESS_WINDOW,
+    FundingDivergenceFactor,
+)
 
 
 __all__ = [
@@ -18,5 +22,7 @@ __all__ = [
     "EarlyBirdScanner",
     "EarlyBirdScanItem",
     "EarlyBirdScanResult",
+    "FUNDING_FRESHNESS_WINDOW",
+    "FundingDivergenceFactor",
     "format_scan_result",
 ]
