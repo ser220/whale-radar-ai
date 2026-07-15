@@ -9,6 +9,12 @@ from app.intelligence.early_bird.builder import (
     EarlyBirdCandidateBuildResult,
 )
 from app.intelligence.early_bird.engine import EarlyBirdEngine
+from app.intelligence.early_bird.emerging import (
+    EmergingSituation,
+    EmergingSituationEngine,
+    EmergingStage,
+    format_emerging_situation,
+)
 from app.intelligence.early_bird.enums import EarlyBirdFactor
 from app.intelligence.early_bird.explain import (
     EarlyBirdExplainer,
@@ -32,6 +38,10 @@ __all__ = [
     "EarlyBirdFactorValue",
     "EarlyBirdPolicy",
     "FactorAvailability",
+    "EmergingSituation",
+    "EmergingSituationEngine",
+    "EmergingStage",
+    "format_emerging_situation",
     "format_explanation",
     "format_explanations",
 ]
