@@ -10,6 +10,12 @@ from app.intelligence.early_bird.builder import (
 )
 from app.intelligence.early_bird.engine import EarlyBirdEngine
 from app.intelligence.early_bird.enums import EarlyBirdFactor
+from app.intelligence.early_bird.explain import (
+    EarlyBirdExplainer,
+    EarlyBirdExplanation,
+    format_explanation,
+    format_explanations,
+)
 from app.intelligence.early_bird.models import EarlyBirdAssessment, EarlyBirdCandidate
 from app.intelligence.early_bird.policy import EarlyBirdPolicy
 
@@ -20,8 +26,12 @@ __all__ = [
     "EarlyBirdCandidateBuilder",
     "EarlyBirdCandidateBuildResult",
     "EarlyBirdEngine",
+    "EarlyBirdExplainer",
+    "EarlyBirdExplanation",
     "EarlyBirdFactor",
     "EarlyBirdFactorValue",
     "EarlyBirdPolicy",
     "FactorAvailability",
+    "format_explanation",
+    "format_explanations",
 ]
