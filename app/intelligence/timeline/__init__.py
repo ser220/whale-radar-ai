@@ -17,6 +17,17 @@ from app.intelligence.timeline.identity import (
     SituationIdentityEngine,
     SituationIdentityResult,
 )
+from app.intelligence.timeline.evolution import (
+    DeltaState,
+    EvolutionAction,
+    SituationDNADelta,
+    SituationEvolutionBatchResult,
+    SituationEvolutionDecision,
+    SituationEvolutionEngine,
+    extract_situation_dna_deltas,
+    format_situation_evolution,
+    format_situation_evolution_batch,
+)
 from app.intelligence.timeline.timeline import append_timeline_entry
 
 
@@ -24,13 +35,22 @@ __all__ = [
     "EarlyBirdTimelineAdapter",
     "EarlyBirdTimelineBatchResult",
     "EarlyBirdTimelineResult",
+    "DeltaState",
+    "EvolutionAction",
     "MarketSituationTimeline",
     "MarketSituationTimelineEntry",
+    "SituationDNADelta",
+    "SituationEvolutionBatchResult",
+    "SituationEvolutionDecision",
+    "SituationEvolutionEngine",
     "SituationIdentityEngine",
     "SituationIdentityResult",
     "SituationDNA",
     "append_timeline_entry",
     "build_timelines_from_scan",
     "deterministic_run_local_ids",
+    "extract_situation_dna_deltas",
     "format_early_bird_timeline",
+    "format_situation_evolution",
+    "format_situation_evolution_batch",
 ]
