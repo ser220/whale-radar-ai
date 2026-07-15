@@ -28,6 +28,16 @@ from app.intelligence.timeline.evolution import (
     format_situation_evolution,
     format_situation_evolution_batch,
 )
+from app.intelligence.timeline.expectations import (
+    ExpectationKind,
+    ExpectationPolicy,
+    ExpectationStrength,
+    SituationExpectation,
+    SituationExpectationEngine,
+    deterministic_expectation_id,
+    format_situation_expectation,
+    format_situation_expectations,
+)
 from app.intelligence.timeline.timeline import append_timeline_entry
 
 
@@ -37,20 +47,28 @@ __all__ = [
     "EarlyBirdTimelineResult",
     "DeltaState",
     "EvolutionAction",
+    "ExpectationKind",
+    "ExpectationPolicy",
+    "ExpectationStrength",
     "MarketSituationTimeline",
     "MarketSituationTimelineEntry",
     "SituationDNADelta",
     "SituationEvolutionBatchResult",
     "SituationEvolutionDecision",
     "SituationEvolutionEngine",
+    "SituationExpectation",
+    "SituationExpectationEngine",
     "SituationIdentityEngine",
     "SituationIdentityResult",
     "SituationDNA",
     "append_timeline_entry",
     "build_timelines_from_scan",
     "deterministic_run_local_ids",
+    "deterministic_expectation_id",
     "extract_situation_dna_deltas",
     "format_early_bird_timeline",
     "format_situation_evolution",
     "format_situation_evolution_batch",
+    "format_situation_expectation",
+    "format_situation_expectations",
 ]
