@@ -50,10 +50,23 @@ expected next from the latest state of a Market Situation Timeline.
 - source stage;
 - all eight source factor values and availability states;
 - deeply frozen metadata containing policy version, rule name, source-entry
-  timestamp, and generation semantics.
+  timestamp, generation semantics, and evaluation contract version `"1"`.
 
 It contains no evaluation status, observed outcome, market direction, trading
 instruction, or execution field.
+
+### Evaluation contract amendment
+
+Every newly generated expectation stores `metadata.evaluation_contract` with
+common fields `contract_version`, `rule_name`, `expectation_kind`, `subject`,
+`source_policy_version`, `source_timeline_version`, `source_stage`, and
+`window_minutes`. Rule-specific fields preserve only the thresholds,
+availability states, factor names, stages, and evidence counts required by that
+rule. The structure is deeply frozen and primitive/serializable only.
+
+Historical payloads without this additive field continue to deserialize. The
+contract format is version `"1"`; the existing expectation policy remains
+version 1. Current defaults may never repair an absent historical contract.
 
 ## Validation
 
@@ -149,6 +162,9 @@ end.
 - source values, availability, stage, entry ID, Timeline version, and policy
   version are copied and immutable;
 - later facts and policy changes cannot modify prior expectations.
+- stored evaluation contracts are authoritative for future evaluation;
+- descriptive criteria remain presentation and are never parsed as rules;
+- historical records without a contract remain valid but evaluate uncertainly.
 
 ## Dependency boundary
 

@@ -26,6 +26,15 @@ The model has no evaluation status, outcome, direction, recommendation, or
 execution fields. Terminal formatting displays `NOT EVALUATED` as presentation
 text only.
 
+### Backward-compatible contract amendment
+
+New expectations now include deeply frozen
+`metadata.evaluation_contract` version `"1"`. It captures exact structured
+parameters for all seven rules without parsing text or consulting future policy
+defaults. Existing fields, rule conditions, formulas, windows, order, IDs,
+names, and semantics are unchanged. Historical expectations without it still
+load and must evaluate uncertainly rather than by guessed defaults.
+
 ## Rules implemented
 
 1. Volume confirmation from material measured structure and weak measured
@@ -106,7 +115,7 @@ accuracy, or trade claim was made.
 ## Verification
 
 - Python 3.9 compile: passed.
-- Focused Expectation tests: 40 passed.
+- Focused Expectation tests: 45 passed, including five amendment tests.
 - Complete specified unit suite: 490 passed, including the 40 focused tests.
 - Safe smoke tests: `test_core.py`, `test_filter.py`, `test_parser.py` passed.
 - Runtime dependency audit: passed.

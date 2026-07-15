@@ -37,6 +37,10 @@ FACTOR_LABELS = MappingProxyType({
 
 AVAILABLE = "AVAILABLE"
 MISSING = "MISSING"
+EVALUATION_CONTRACT_VERSION = "1"
+EVALUATION_MINIMUM_COVERAGE_RATIO = 0.60
+EVALUATION_MATERIAL_CHANGE_THRESHOLD = 20.0
+EVALUATION_SHARP_CHANGE_THRESHOLD = 35.0
 
 
 class ExpectationKind(str, Enum):
@@ -370,6 +374,7 @@ class _RuleOutput:
     fulfillment: Tuple[str, ...]
     contradiction: Tuple[str, ...]
     window_minutes: int
+    evaluation_parameters: TypingMapping[str, Any]
 
 
 class SituationExpectationEngine:
@@ -458,10 +463,34 @@ class SituationExpectationEngine:
                         "window_minutes": output.window_minutes,
                         "source_entry_created_at": entry.created_at.isoformat(),
                         "generation_semantics": "hypothesis_not_evaluation",
+                        "evaluation_contract": self._evaluation_contract(
+                            timeline,
+                            entry,
+                            output,
+                        ),
                     },
                 )
             )
         return tuple(expectations)
+
+    def _evaluation_contract(
+        self,
+        timeline: MarketSituationTimeline,
+        entry: Any,
+        output: _RuleOutput,
+    ) -> TypingMapping[str, Any]:
+        contract = {
+            "contract_version": EVALUATION_CONTRACT_VERSION,
+            "rule_name": output.rule_name,
+            "expectation_kind": output.kind.value,
+            "subject": output.subject,
+            "source_policy_version": self._policy.policy_version,
+            "source_timeline_version": timeline.version,
+            "source_stage": entry.stage.value,
+            "window_minutes": output.window_minutes,
+        }
+        contract.update(dict(output.evaluation_parameters))
+        return contract
 
     def _available(self, dna: SituationDNA, availability: TypingMapping[str, str], name: str) -> bool:
         return availability.get(name) == AVAILABLE and getattr(dna, name) is not None
@@ -498,6 +527,17 @@ class SituationExpectationEngine:
                 "Maturity increases while measured Volume Expansion remains below confirmation.",
             ),
             policy.default_window_minutes,
+            {
+                "target_factor": "volume_expansion",
+                "confirmation_threshold": policy.weak_confirmation_threshold,
+                "structure_material_threshold": policy.material_factor_threshold,
+                "structure_contradiction_threshold": policy.material_factor_threshold,
+                "maturity_contradiction_threshold": min(
+                    100.0,
+                    dna.maturity + EVALUATION_MATERIAL_CHANGE_THRESHOLD,
+                ),
+                "minimum_coverage_ratio": EVALUATION_MINIMUM_COVERAGE_RATIO,
+            },
         ),)
 
     def _momentum_confirmation(self, dna: SituationDNA, availability: TypingMapping[str, str]) -> Tuple[_RuleOutput, ...]:
@@ -533,6 +573,14 @@ class SituationExpectationEngine:
                 "All measured initiating factors fall below {0}.".format(_number(policy.material_factor_threshold)),
             ),
             policy.default_window_minutes,
+            {
+                "target_factor": "momentum_shift",
+                "confirmation_threshold": policy.weak_confirmation_threshold,
+                "initiating_factors": initiating,
+                "initiating_factor_threshold": policy.material_factor_threshold,
+                "contradiction_threshold": policy.material_factor_threshold,
+                "minimum_coverage_ratio": EVALUATION_MINIMUM_COVERAGE_RATIO,
+            },
         ),)
 
     def _factor_persistence(self, dna: SituationDNA, availability: TypingMapping[str, str]) -> Tuple[_RuleOutput, ...]:
@@ -555,6 +603,12 @@ class SituationExpectationEngine:
                     "Measured {0} falls below {1}.".format(FACTOR_LABELS[name], _number(policy.material_factor_threshold)),
                 ),
                 policy.short_window_minutes,
+                {
+                    "target_factor": name,
+                    "persistence_threshold": policy.material_factor_threshold,
+                    "contradiction_threshold": policy.material_factor_threshold,
+                    "minimum_required_later_entries": 1,
+                },
             ))
         return tuple(outputs)
 
@@ -589,6 +643,18 @@ class SituationExpectationEngine:
                 "Structure Event or Volume Expansion loses measured strong-factor support.",
             ),
             policy.long_window_minutes,
+            {
+                "target_factor": "funding_divergence",
+                "source_required_availability": "MISSING",
+                "fulfillment_availability": "AVAILABLE",
+                "missing_confirmation_availability": "MISSING",
+                "disqualifying_availability_states": (
+                    "ERROR",
+                    "STALE",
+                    "UNSUPPORTED",
+                ),
+                "minimum_required_later_entries": 1,
+            },
         ),)
 
     def _stage_advance(
@@ -635,6 +701,15 @@ class SituationExpectationEngine:
                 "Emergence, Horizon, or independent measured support falls below the configured requirement.",
             ),
             policy.long_window_minutes,
+            {
+                "source_stage": stage.value,
+                "expected_target_stage": next_stage.value,
+                "incompatible_stages": self._incompatible_advance_stages(
+                    stage,
+                    next_stage,
+                ),
+                "minimum_required_later_entries": 1,
+            },
         ),)
 
     def _stage_persistence(
@@ -678,6 +753,11 @@ class SituationExpectationEngine:
                 "Maturity or Horizon crosses a configured transition-risk threshold.",
             ),
             policy.default_window_minutes,
+            {
+                "source_stage": stage.value,
+                "required_stage": stage.value,
+                "minimum_required_later_entries": 1,
+            },
         ),)
 
     def _invalidation_risk(
@@ -730,7 +810,40 @@ class SituationExpectationEngine:
                 "A future Timeline entry records a classification change during the window.",
             ),
             policy.short_window_minutes,
+            {
+                "maturity_threshold": policy.high_maturity_threshold,
+                "horizon_threshold": policy.low_horizon_threshold,
+                "concentration_threshold": 1,
+                "strengthening_thresholds": {
+                    "minimum_emergence_increase": EVALUATION_MATERIAL_CHANGE_THRESHOLD,
+                    "minimum_horizon_increase": EVALUATION_MATERIAL_CHANGE_THRESHOLD,
+                    "minimum_supporting_factor_count": 2,
+                },
+                "weakening_thresholds": {
+                    "material_change_threshold": EVALUATION_MATERIAL_CHANGE_THRESHOLD,
+                    "sharp_change_threshold": EVALUATION_SHARP_CHANGE_THRESHOLD,
+                },
+            },
         ),)
+
+    @staticmethod
+    def _incompatible_advance_stages(
+        source_stage: EmergingStage,
+        target_stage: EmergingStage,
+    ) -> Tuple[str, ...]:
+        ordered = (
+            EmergingStage.UNKNOWN,
+            EmergingStage.SEED,
+            EmergingStage.EMERGING,
+            EmergingStage.BUILDING,
+            EmergingStage.MATURE,
+            EmergingStage.EXHAUSTED,
+        )
+        return tuple(
+            stage.value
+            for stage in ordered
+            if stage not in (source_stage, target_stage)
+        )
 
 
 def _number(value: float) -> str:

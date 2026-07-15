@@ -32,6 +32,15 @@ Generation and evaluation are separate responsibilities. PS-4 Step 5 generates
 expectations only. A future separately reviewed component may compare later
 facts with the original payload.
 
+### Additive evaluation contract amendment
+
+Newly generated expectations also preserve a deeply immutable
+`metadata.evaluation_contract` with contract version `"1"`. It records exact
+rule identity, source policy and Timeline versions, source stage, window, and
+only the rule-specific thresholds needed by an evaluator. Historical payloads
+without it remain valid. An evaluator must report uncertainty when the contract
+is absent or incomplete and never substitute current defaults or parse prose.
+
 ## Historical Integrity Principle
 
 1. Every expectation references one exact timeline ID, timeline version, source

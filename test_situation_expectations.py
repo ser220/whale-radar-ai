@@ -321,6 +321,127 @@ class PolicyAndDeterminismTests(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)))
 
 
+class EvaluationContractAmendmentTests(unittest.TestCase):
+    def generated_by_rule(self):
+        engine = SituationExpectationEngine(
+            ExpectationPolicy(maximum_expectations=10)
+        )
+        values = []
+        values.extend(engine.generate(make_timeline()))
+        values.extend(engine.generate(make_timeline(
+            dna=make_dna(
+                whale_activity=75,
+                funding_divergence=70,
+                structure_event=65,
+                volume_expansion=65,
+                momentum_shift=50,
+            )
+        )))
+        missing_funding = available_map(funding_divergence="MISSING")
+        values.extend(engine.generate(make_timeline(
+            dna=make_dna(
+                funding_divergence=None,
+                structure_event=70,
+                volume_expansion=65,
+                momentum_shift=50,
+                factor_availability=missing_funding,
+            )
+        )))
+        values.extend(engine.generate(make_timeline(
+            dna=make_dna(emergence=40),
+            stage=EmergingStage.BUILDING,
+        )))
+        return values
+
+    def test_every_generated_rule_has_common_evaluation_contract(self):
+        required = {
+            "contract_version",
+            "rule_name",
+            "expectation_kind",
+            "subject",
+            "source_policy_version",
+            "source_timeline_version",
+            "source_stage",
+            "window_minutes",
+        }
+        values = self.generated_by_rule()
+        self.assertTrue(values)
+        for expectation in values:
+            with self.subTest(expectation=expectation.expectation_id):
+                contract = expectation.metadata["evaluation_contract"]
+                self.assertTrue(required <= set(contract))
+                self.assertEqual("1", contract["contract_version"])
+                self.assertEqual(expectation.metadata["rule_name"], contract["rule_name"])
+                self.assertEqual(expectation.kind.value, contract["expectation_kind"])
+
+    def test_rule_specific_required_parameters_are_present(self):
+        required = {
+            "volume_confirmation": {
+                "target_factor", "confirmation_threshold",
+                "structure_material_threshold", "structure_contradiction_threshold",
+                "maturity_contradiction_threshold", "minimum_coverage_ratio",
+            },
+            "momentum_confirmation": {
+                "target_factor", "confirmation_threshold", "initiating_factors",
+                "initiating_factor_threshold", "contradiction_threshold",
+                "minimum_coverage_ratio",
+            },
+            "factor_persistence": {
+                "target_factor", "persistence_threshold", "contradiction_threshold",
+                "minimum_required_later_entries",
+            },
+            "funding_appearance_after_structure_volume": {
+                "target_factor", "source_required_availability",
+                "fulfillment_availability", "missing_confirmation_availability",
+                "disqualifying_availability_states", "minimum_required_later_entries",
+            },
+            "stage_persistence_building": {
+                "source_stage", "required_stage", "minimum_required_later_entries",
+            },
+            "invalidation_risk": {
+                "maturity_threshold", "horizon_threshold", "concentration_threshold",
+                "strengthening_thresholds", "weakening_thresholds",
+            },
+        }
+        contracts = {
+            item.metadata["rule_name"]: item.metadata["evaluation_contract"]
+            for item in self.generated_by_rule()
+        }
+        stage_advance = next(
+            value for key, value in contracts.items()
+            if key.startswith("stage_advance_")
+        )
+        self.assertTrue({
+            "source_stage", "expected_target_stage", "incompatible_stages",
+            "minimum_required_later_entries",
+        } <= set(stage_advance))
+        for rule_name, names in required.items():
+            with self.subTest(rule_name=rule_name):
+                self.assertTrue(names <= set(contracts[rule_name]))
+
+    def test_evaluation_contract_is_deeply_immutable(self):
+        expectation = SituationExpectationEngine().generate(make_timeline())[0]
+        contract = expectation.metadata["evaluation_contract"]
+        self.assertIsInstance(contract, MappingProxyType)
+        with self.assertRaises(TypeError):
+            contract["confirmation_threshold"] = 99
+
+    def test_evaluation_contract_serialization_round_trip(self):
+        expectation = SituationExpectationEngine().generate(make_timeline())[0]
+        restored = SituationExpectation.from_dict(expectation.to_dict())
+        self.assertEqual(expectation, restored)
+        self.assertEqual(
+            expectation.metadata["evaluation_contract"],
+            restored.metadata["evaluation_contract"],
+        )
+
+    def test_historical_payload_without_evaluation_contract_still_loads(self):
+        payload = make_expectation().to_dict()
+        payload["metadata"].pop("evaluation_contract", None)
+        restored = SituationExpectation.from_dict(payload)
+        self.assertNotIn("evaluation_contract", restored.metadata)
+
+
 class ExpectationRuleTests(unittest.TestCase):
     def generate(self, dna=None, stage=EmergingStage.EMERGING, supporting=("structure_event", "volume_expansion"), policy=None):
         return SituationExpectationEngine(policy).generate(
