@@ -9,6 +9,20 @@ from .enums import (
     MetricAvailability,
     MetricFailureCategory,
 )
+from .consumer_enums import (
+    ClassificationConsumerFailureCategory,
+    MetricIndicator,
+    MetricsConsumerFailureCategory,
+)
+from .consumer_models import (
+    ClassificationAssignment,
+    ClassificationConsumerError,
+    ClassificationConsumerPolicy,
+    MetricsConsumerError,
+    MetricsConsumerPolicy,
+    RealityGapConsumerContext,
+)
+from .consumers import classify_reality_gap, measure_reality_gap
 from .models import (
     ClassificationValidationError,
     MetricValidationError,
@@ -18,12 +32,23 @@ from .models import (
 )
 
 __all__ = [
+    "ClassificationAssignment",
+    "ClassificationConsumerError",
+    "ClassificationConsumerFailureCategory",
+    "ClassificationConsumerPolicy",
     "ClassificationFailureCategory",
     "ClassificationValidationError",
     "MetricAvailability",
+    "MetricIndicator",
+    "MetricsConsumerError",
+    "MetricsConsumerFailureCategory",
+    "MetricsConsumerPolicy",
     "MetricFailureCategory",
     "MetricValidationError",
     "RealityGapClassification",
+    "RealityGapConsumerContext",
     "RealityGapMetricSet",
     "RealityGapMetricValue",
+    "classify_reality_gap",
+    "measure_reality_gap",
 ]
