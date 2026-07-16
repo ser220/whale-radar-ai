@@ -1,5 +1,6 @@
 """Public immutable contracts for Reality Gap Analysis."""
 
+from .assembly import RealityGapAssembler, RealityGapAssemblyInput, RealityGapAssemblyResult
 from .enums import (
     IntelligenceGapType,
     ObservabilityGapType,
@@ -35,6 +36,9 @@ __all__ = [
     "ObservabilityGapRecord",
     "ObservabilityGapType",
     "RealityGapAnalysis",
+    "RealityGapAssembler",
+    "RealityGapAssemblyInput",
+    "RealityGapAssemblyResult",
     "RealityGapDecisionTrace",
     "RealityGapDimension",
     "RealityGapEvidenceEligibility",

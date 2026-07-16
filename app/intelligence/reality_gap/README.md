@@ -117,3 +117,35 @@ assert canonical_json_bytes(restored) == canonical_json_bytes(analysis)
 Serialization uses sorted JSON keys and fixed separators. Contracts generate
 no IDs or timestamps and do not depend on hash order, locale, process time,
 host, environment, network, or external services.
+
+## Deterministic assembly boundary
+
+PS-4 Step 7D adds `RealityGapAssemblyInput`, `RealityGapAssemblyResult`, and
+`RealityGapAssembler`. The caller supplies already-classified values, evidence,
+candidates, IDs, policy versions, provenance, capabilities, and a decision
+trace. The assembler validates references and declared consistency, applies
+contract-approved deterministic ordering, constructs exactly one immutable
+`RealityGapAnalysis`, and verifies canonical serialization.
+
+```python
+from app.intelligence.reality_gap import RealityGapAssembler
+
+result = RealityGapAssembler().assemble(assembly_input)
+analysis = result.analysis
+assert analysis.gap_id == assembly_input.gap_id
+```
+
+One complete evidence collection is retained. Both `ELIGIBLE` and `INELIGIBLE`
+references remain in `RealityGapAnalysis.supporting_evidence`; each evidence
+object's eligibility remains authoritative. Accepted and partially supported
+candidates require eligible supporting evidence. Rejected and unresolved
+candidates may retain ineligible references as explicit rejection or
+limitation audit facts. No rejected evidence is silently discarded.
+
+The assembler does not generate stable IDs. ID generation belongs to a future
+orchestration boundary. It also does not extract evidence, generate candidates,
+classify gaps, calculate metrics or severity, access runtime Timeline,
+Expectation or Evaluation objects, persist data, learn, or perform Outcome
+Analysis. `assemble_revision()` assembles normally and then applies the existing
+immutable anti-hindsight revision validator; it does not merge or alter either
+revision.
