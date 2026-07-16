@@ -15,11 +15,12 @@ from .read_models import RealityGapAttachmentReadContract
 from .lifecycle_enums import AttachmentLifecycleState
 from .lifecycle_models import RealityGapAttachmentLifecyclePolicy
 
-from .compatibility_enums import CompatibilityStatus
+from .compatibility_enums import AttachmentCompatibilityStatus
 from .compatibility_models import (
     RealityGapAttachmentCompatibilityPolicy,
     RealityGapAttachmentCompatibilityDecision,
 )
+
 
 __all__ = [
     # Core attachment contract
@@ -39,7 +40,7 @@ __all__ = [
     "RealityGapAttachmentLifecyclePolicy",
 
     # Compatibility
-    "CompatibilityStatus",
+    "AttachmentCompatibilityStatus",
     "RealityGapAttachmentCompatibilityPolicy",
     "RealityGapAttachmentCompatibilityDecision",
 ]
