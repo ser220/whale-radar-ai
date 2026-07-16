@@ -1,54 +1,46 @@
-"""Read-only attachment contracts for Reality Gap consumers.
+"""Immutable RealityGapAttachment governance contracts."""
 
-The package exposes immutable records only.  It does not resolve references,
-load payloads, persist data, or integrate with production services.
-"""
+from .enums import AttachmentFailureCategory
+from .models import (
+    AnalysisReference,
+    AttachmentValidationError,
+    ClassificationReference,
+    MetricSetReference,
+    RealityGapAnalysisAttachment,
+)
 
 from .read_enums import AttachmentAvailabilityStatus
-from .compatibility_enums import (
-    AttachmentCompatibilityStatus,
-    AttachmentVersionCondition,
-)
+from .read_models import RealityGapAttachmentReadContract
+
+from .lifecycle_enums import AttachmentLifecycleState
+from .lifecycle_models import RealityGapAttachmentLifecyclePolicy
+
+from .compatibility_enums import AttachmentCompatibilityStatus
 from .compatibility_models import (
-    AttachmentCompatibilityValidationError,
-    AttachmentVersionCompatibilityRule,
-    RealityGapAttachmentCompatibilityDecision,
     RealityGapAttachmentCompatibilityPolicy,
-    canonical_compatibility_categories,
-    canonical_version_rules,
-)
-from .lifecycle_enums import AttachmentLifecycleState, AttachmentRevisionAxis
-from .lifecycle_models import (
-    AttachmentLifecycleTransition,
-    AttachmentLifecycleValidationError,
-    RealityGapAttachmentLifecyclePolicy,
-    canonical_lifecycle_transitions,
-    canonical_revision_axes,
-)
-from .read_models import (
-    AttachmentReadReference,
-    AttachmentReadValidationError,
-    RealityGapAttachmentReadContract,
+    RealityGapAttachmentCompatibilityDecision,
 )
 
+
 __all__ = [
+    # Core attachment contract
+    "AnalysisReference",
+    "AttachmentFailureCategory",
+    "AttachmentValidationError",
+    "ClassificationReference",
+    "MetricSetReference",
+    "RealityGapAnalysisAttachment",
+
+    # Read boundary
     "AttachmentAvailabilityStatus",
-    "AttachmentCompatibilityStatus",
-    "AttachmentCompatibilityValidationError",
-    "AttachmentLifecycleState",
-    "AttachmentLifecycleTransition",
-    "AttachmentLifecycleValidationError",
-    "AttachmentReadReference",
-    "AttachmentReadValidationError",
-    "AttachmentRevisionAxis",
-    "AttachmentVersionCompatibilityRule",
-    "AttachmentVersionCondition",
-    "RealityGapAttachmentCompatibilityDecision",
-    "RealityGapAttachmentCompatibilityPolicy",
-    "RealityGapAttachmentLifecyclePolicy",
     "RealityGapAttachmentReadContract",
-    "canonical_lifecycle_transitions",
-    "canonical_compatibility_categories",
-    "canonical_revision_axes",
-    "canonical_version_rules",
+
+    # Lifecycle
+    "AttachmentLifecycleState",
+    "RealityGapAttachmentLifecyclePolicy",
+
+    # Compatibility
+    "AttachmentCompatibilityStatus",
+    "RealityGapAttachmentCompatibilityPolicy",
+    "RealityGapAttachmentCompatibilityDecision",
 ]
