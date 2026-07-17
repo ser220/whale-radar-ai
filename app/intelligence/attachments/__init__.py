@@ -20,6 +20,10 @@ from .read_models import (
     AttachmentReadValidationError,
     RealityGapAttachmentReadContract,
 )
+from .read_v2_models import (
+    AttachmentReadV2ValidationError,
+    RealityGapAttachmentReadReferenceV2,
+)
 
 from .lifecycle_enums import AttachmentLifecycleState, AttachmentRevisionAxis
 from .lifecycle_models import (
@@ -62,7 +66,9 @@ __all__ = [
     "AttachmentAvailabilityStatus",
     "AttachmentReadReference",
     "AttachmentReadValidationError",
+    "AttachmentReadV2ValidationError",
     "RealityGapAttachmentReadContract",
+    "RealityGapAttachmentReadReferenceV2",
 
     # Lifecycle
     "AttachmentLifecycleState",
