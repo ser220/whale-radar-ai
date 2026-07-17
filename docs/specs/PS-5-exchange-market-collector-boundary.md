@@ -2,9 +2,9 @@
 
 ## Objective
 
-Define the interface between a future exchange response adapter and the
-immutable `MarketSnapshot` contract. This phase provides an adapter protocol
-only. It does not provide a concrete collector or connect to an exchange.
+Define the interface between an exchange response adapter and the immutable
+`MarketSnapshot` contract. The protocol remains independent of concrete
+transport implementations.
 
 ```text
 External exchange response
@@ -39,13 +39,13 @@ uppercase, and stored as an immutable tuple.
 
 ## Adapter-only responsibility
 
-A future implementation may map fields from an already-received exchange
-payload into `MarketSnapshot`. It must not add intelligence, interpret market
-conditions, calculate indicators, evaluate decisions, or execute trades.
+An implementation may map fields from an exchange payload into
+`MarketSnapshot`. It must not add intelligence, interpret market conditions,
+calculate indicators, evaluate decisions, or execute trades.
 
 ## Explicit non-goals
 
-This boundary contains no:
+The protocol and metadata boundary contain no:
 
 - networking or live API calls;
 - API keys, credentials, or secrets;
@@ -56,4 +56,6 @@ This boundary contains no:
 - order execution, position management, or trading logic;
 - dependency on or modification of PS-4 governance.
 
-Concrete Binance, OKX, and Gate collectors remain future components.
+`BinanceMarketCollector` is the first concrete implementation and keeps its
+public HTTP transport outside the protocol. Concrete OKX and Gate collectors
+remain future components and should follow the same one-way boundary.

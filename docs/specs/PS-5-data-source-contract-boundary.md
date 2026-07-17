@@ -106,10 +106,14 @@ into `TechnicalSignalSnapshot`, but collectors remain a separate component.
 ## Exchange collector interface
 
 The optional `app.intelligence.data_sources.collectors` package defines the
-contract-only `ExchangeMarketCollector` protocol. It allows a future Binance,
-OKX, or Gate adapter to transform an already-supplied external response into a
-`MarketSnapshot`. No concrete collector, network transport, credentials, or
-runtime orchestration is included.
+contract-only `ExchangeMarketCollector` protocol. It allows a Binance, OKX, or
+Gate adapter to transform an external response into a `MarketSnapshot`.
 
 The dependency remains one-way: collector adapters may depend on snapshot
 contracts, while snapshot contracts do not depend on collectors.
+
+`BinanceMarketCollector` is the first concrete adapter. It uses a public
+market-data-only Binance endpoint with explicit timeout handling and no
+authentication. The adapter maps externally supplied ticker facts into the
+existing immutable contract; it does not change snapshot schemas or execute
+intelligence, persistence, or trading behavior.

@@ -154,7 +154,11 @@ class ExchangeMarketCollectorArchitectureTests(unittest.TestCase):
         allowed_roots = {
             "collections",
             "dataclasses",
+            "datetime",
+            "json",
+            "socket",
             "typing",
+            "urllib",
         }
 
         for path in package.rglob("*.py"):

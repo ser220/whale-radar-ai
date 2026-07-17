@@ -1,15 +1,15 @@
 # External data source contracts
 
 `app.intelligence.data_sources` defines immutable normalized snapshots for
-future exchange, derivatives, on-chain, news, social, and analytics
-collectors. It is a contract-only package and is intentionally separate from
-the existing runtime adapters under `app.sources`.
+exchange, derivatives, on-chain, news, social, and analytics observations. Its
+snapshot modules are contract-only and remain separate from runtime behavior.
+The nested `collectors` package contains explicitly isolated source adapters.
 
-The package uses only the Python standard library. It performs no networking,
-collection, indicator calculation, wallet resolution, trading, persistence,
-or PS-4 governance execution. Future collectors may convert an external API
-payload into one of these snapshots, but collectors are not part of this
-boundary.
+The snapshot contracts use only the Python standard library. They perform no
+networking, collection, indicator calculation, wallet resolution, trading,
+persistence, or PS-4 governance execution. Collector adapters may convert an
+external payload into a snapshot but cannot move runtime behavior into the
+contracts.
 
 `TechnicalSignalSnapshot` records externally produced TradingView analytics.
 It does not execute Pine Script, connect to TradingView, receive webhooks, or
@@ -29,6 +29,14 @@ Gate adapter accepts an already-supplied external response and returns a
 `MarketSnapshot`. Its immutable metadata declares the source, exchange
 category, and supported symbols.
 
-The interface performs no networking and provides no concrete collector. A
-future adapter may implement the protocol, but it must remain a transformation
-boundary without intelligence, decisions, persistence, or trading behavior.
+The interface itself performs no networking. Concrete adapters implement it
+as a transformation boundary without intelligence, decisions, persistence, or
+trading behavior.
+
+## Binance public adapter
+
+`BinanceMarketCollector` is the first concrete exchange adapter. It uses the
+public market-data-only Binance host and `GET /api/v3/ticker/24hr` for
+`BTCUSDT` and `ETHUSDT`. It sends no API key or authentication data. Networking
+and timeout handling remain inside the adapter, which maps Binance's supplied
+24-hour values and close timestamp into `MarketSnapshot`.
