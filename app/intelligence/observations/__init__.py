@@ -1,13 +1,17 @@
 """Public API for immutable normalized observation contracts."""
 
 from app.intelligence.observations.base import Observation
+from app.intelligence.observations.market import MarketObservation
 from app.intelligence.observations.enums import (
     DataTrend,
     FundingBias,
     LiquiditySide,
     StructureBreak,
     TrendBias,
+    MarketObservationType,
+    ObservationSeverity,
 )
+
 from app.intelligence.observations.funding import FundingObservation
 from app.intelligence.observations.liquidity import LiquidityObservation
 from app.intelligence.observations.momentum import MomentumObservation
@@ -28,4 +32,8 @@ __all__ = [
     "StructureObservation",
     "TrendBias",
     "TrendObservation",
+    "MarketObservation",
+    "MarketObservationType",
+    "ObservationSeverity",
+
 ]
