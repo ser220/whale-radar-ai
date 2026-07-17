@@ -9,7 +9,6 @@ from app.intelligence.observations.enums import (
     StructureBreak,
     TrendBias,
     MarketObservationType,
-    ObservationSeverity,
 )
 
 from app.intelligence.observations.funding import FundingObservation
@@ -34,6 +33,4 @@ __all__ = [
     "TrendObservation",
     "MarketObservation",
     "MarketObservationType",
-    "ObservationSeverity",
-
 ]
