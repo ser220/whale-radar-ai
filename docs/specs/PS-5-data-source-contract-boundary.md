@@ -102,3 +102,14 @@ TradingView support is observation-only. It does not execute Pine Script,
 connect to TradingView APIs, receive webhooks, calculate signals, or open
 positions. Future webhook collectors may consume and normalize external data
 into `TechnicalSignalSnapshot`, but collectors remain a separate component.
+
+## Exchange collector interface
+
+The optional `app.intelligence.data_sources.collectors` package defines the
+contract-only `ExchangeMarketCollector` protocol. It allows a future Binance,
+OKX, or Gate adapter to transform an already-supplied external response into a
+`MarketSnapshot`. No concrete collector, network transport, credentials, or
+runtime orchestration is included.
+
+The dependency remains one-way: collector adapters may depend on snapshot
+contracts, while snapshot contracts do not depend on collectors.

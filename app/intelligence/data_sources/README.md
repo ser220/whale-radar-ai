@@ -20,3 +20,15 @@ package.
 Every snapshot is a frozen dataclass with strict validation, exact
 `to_dict()`/`from_dict()` round trips, UTC timestamps, and deterministic
 `canonical_json()` output.
+
+## Collector interfaces
+
+`app.intelligence.data_sources.collectors` contains contract-only adapter
+interfaces. `ExchangeMarketCollector` declares how a future Binance, OKX, or
+Gate adapter accepts an already-supplied external response and returns a
+`MarketSnapshot`. Its immutable metadata declares the source, exchange
+category, and supported symbols.
+
+The interface performs no networking and provides no concrete collector. A
+future adapter may implement the protocol, but it must remain a transformation
+boundary without intelligence, decisions, persistence, or trading behavior.
