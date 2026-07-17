@@ -75,6 +75,10 @@ from .compatibility_basis_record_models import (
     CompatibilityDecisionBasisRecordEnvelopeValidationError,
     RealityGapCompatibilityDecisionBasisRecordEnvelope,
 )
+from .governance_provenance_bundle_models import (
+    GovernanceProvenanceBundleValidationError,
+    RealityGapGovernanceProvenanceBundle,
+)
 
 
 __all__ = [
@@ -119,6 +123,7 @@ __all__ = [
     "CompatibilityDecisionBasisValidationError",
     "CompatibilityDecisionReferenceValidationError",
     "CompatibilityDecisionRecordEnvelopeValidationError",
+    "GovernanceProvenanceBundleValidationError",
     "AttachmentVersionCompatibilityRule",
     "AttachmentVersionCondition",
     "RealityGapAttachmentCompatibilityDecision",
@@ -130,6 +135,7 @@ __all__ = [
     "RealityGapCompatibilityDecisionBasisRecordEnvelope",
     "RealityGapCompatibilityDecisionReference",
     "RealityGapCompatibilityDecisionRecordEnvelope",
+    "RealityGapGovernanceProvenanceBundle",
     "canonical_compatibility_categories",
     "canonical_version_rules",
 ]
