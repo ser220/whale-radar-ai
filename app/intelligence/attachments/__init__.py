@@ -46,6 +46,11 @@ from .compatibility_models import (
     canonical_compatibility_categories,
     canonical_version_rules,
 )
+from .compatibility_basis_enums import CompatibilityDecisionBasisType
+from .compatibility_basis_models import (
+    CompatibilityDecisionBasisValidationError,
+    RealityGapCompatibilityDecisionBasis,
+)
 
 
 __all__ = [
@@ -82,10 +87,13 @@ __all__ = [
     # Compatibility
     "AttachmentCompatibilityStatus",
     "AttachmentCompatibilityValidationError",
+    "CompatibilityDecisionBasisType",
+    "CompatibilityDecisionBasisValidationError",
     "AttachmentVersionCompatibilityRule",
     "AttachmentVersionCondition",
     "RealityGapAttachmentCompatibilityDecision",
     "RealityGapAttachmentCompatibilityPolicy",
+    "RealityGapCompatibilityDecisionBasis",
     "canonical_compatibility_categories",
     "canonical_version_rules",
 ]
