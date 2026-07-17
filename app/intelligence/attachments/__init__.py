@@ -67,6 +67,10 @@ from .compatibility_association_v2_models import (
     CompatibilityDecisionAssociationV2ValidationError,
     RealityGapCompatibilityDecisionAssociationV2,
 )
+from .compatibility_decision_record_models import (
+    CompatibilityDecisionRecordEnvelopeValidationError,
+    RealityGapCompatibilityDecisionRecordEnvelope,
+)
 
 
 __all__ = [
@@ -109,6 +113,7 @@ __all__ = [
     "CompatibilityDecisionBasisReferenceValidationError",
     "CompatibilityDecisionBasisValidationError",
     "CompatibilityDecisionReferenceValidationError",
+    "CompatibilityDecisionRecordEnvelopeValidationError",
     "AttachmentVersionCompatibilityRule",
     "AttachmentVersionCondition",
     "RealityGapAttachmentCompatibilityDecision",
@@ -118,6 +123,7 @@ __all__ = [
     "RealityGapCompatibilityDecisionBasis",
     "RealityGapCompatibilityDecisionBasisReference",
     "RealityGapCompatibilityDecisionReference",
+    "RealityGapCompatibilityDecisionRecordEnvelope",
     "canonical_compatibility_categories",
     "canonical_version_rules",
 ]
