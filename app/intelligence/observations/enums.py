@@ -44,7 +44,3 @@ class MarketObservationType(str, Enum):
     MARKET_STATE = "MARKET_STATE"
 
 
-class ObservationSeverity(str, Enum):
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
