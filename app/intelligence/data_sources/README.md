@@ -40,3 +40,18 @@ public market-data-only Binance host and `GET /api/v3/ticker/24hr` for
 `BTCUSDT` and `ETHUSDT`. It sends no API key or authentication data. Networking
 and timeout handling remain inside the adapter, which maps Binance's supplied
 24-hour values and close timestamp into `MarketSnapshot`.
+
+## Binance live smoke runner
+
+`run_binance_market_smoke.py` performs one read-only live request through the
+existing `BinanceMarketCollector` and prints the resulting `MarketSnapshot`
+fields. For example:
+
+```bash
+python3 run_binance_market_smoke.py --symbol BTCUSDT --timeout-seconds 10
+```
+
+The command has no offline mode: every CLI execution uses Binance's public
+market endpoint. It adds no contract, API key, authentication, persistence,
+trading, indicator, or governance behavior. Its focused unit test remains
+deterministic by supplying the existing collector with a fake HTTP opener.
