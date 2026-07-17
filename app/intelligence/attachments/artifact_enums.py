@@ -9,6 +9,7 @@ class RealityGapArtifactType(str, Enum):
     ANALYSIS = "ANALYSIS"
     CLASSIFICATION = "CLASSIFICATION"
     METRIC_SET = "METRIC_SET"
+    ATTACHMENT = "ATTACHMENT"
 
 
 __all__ = ["RealityGapArtifactType"]
