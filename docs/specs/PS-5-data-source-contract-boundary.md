@@ -36,7 +36,7 @@ remains independently immutable.
 ## Source taxonomy
 
 `DataSourceCategory` contains `EXCHANGE`, `DERIVATIVES`, `ON_CHAIN`, `NEWS`,
-`SOCIAL`, and `UNKNOWN`.
+`SOCIAL`, `ANALYTICS`, and `UNKNOWN`.
 
 `DataSourceType` contains:
 
@@ -44,14 +44,16 @@ remains independently immutable.
   `COINBASE`;
 - derivatives: `COINGLASS`;
 - on-chain: `ARKHAM`, `NANSEN`;
+- analytics: `TRADINGVIEW`;
 - future or not-yet-typed sources: `UNKNOWN`.
 
-The category/source matrix is strict. `UNKNOWN` is accepted only for `NEWS`,
-`SOCIAL`, and `UNKNOWN` categories until explicit typed sources are introduced.
-Every concrete snapshot also requires its own category: market snapshots are
-exchange observations, derivatives snapshots are derivatives observations,
-whale and smart-money snapshots are on-chain observations, and news snapshots
-are news observations.
+The category/source matrix is strict. `TRADINGVIEW` is accepted only for
+`ANALYTICS`. `UNKNOWN` is accepted only for `NEWS`, `SOCIAL`, and `UNKNOWN`
+categories until explicit typed sources are introduced. Every concrete
+snapshot also requires its own category: market snapshots are exchange
+observations, derivatives snapshots are derivatives observations, whale and
+smart-money snapshots are on-chain observations, news snapshots are news
+observations, and technical-signal snapshots are analytics observations.
 
 ## Immutable snapshots
 
@@ -62,6 +64,9 @@ are news observations.
 - `SmartMoneySnapshot`: an observed smart-money wallet activity.
 - `NewsEventSnapshot`: an external news event classification supplied by a
   future collector.
+- `TechnicalSignalSnapshot`: an external TradingView analytical observation,
+  including market-structure events, trend observations, or custom indicator
+  output.
 
 All listed fields are required. Symbols and assets normalize to uppercase;
 other textual facts are trimmed but otherwise preserved. Aware timestamps
@@ -92,3 +97,8 @@ This boundary does not add API integration, collectors, source discovery,
 networking, polling, scheduling, retries, indicator engines, wallet resolvers,
 trading execution, databases, repositories, persistence, migrations, or PS-4
 contract changes.
+
+TradingView support is observation-only. It does not execute Pine Script,
+connect to TradingView APIs, receive webhooks, calculate signals, or open
+positions. Future webhook collectors may consume and normalize external data
+into `TechnicalSignalSnapshot`, but collectors remain a separate component.

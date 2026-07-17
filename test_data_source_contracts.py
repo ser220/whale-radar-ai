@@ -15,6 +15,7 @@ from app.intelligence.data_sources import (
     MarketSnapshot,
     NewsEventSnapshot,
     SmartMoneySnapshot,
+    TechnicalSignalSnapshot,
     WhaleActivitySnapshot,
 )
 
@@ -94,6 +95,22 @@ def news_snapshot(**overrides):
     return NewsEventSnapshot(**values)
 
 
+def technical_signal_snapshot(**overrides):
+    values = {
+        "source_category": DataSourceCategory.ANALYTICS,
+        "source": DataSourceType.TRADINGVIEW,
+        "symbol": "btc-usdt",
+        "timeframe": "4h",
+        "signal_type": "BOS",
+        "direction": "BULLISH",
+        "indicator_name": "Market Structure",
+        "value": 1,
+        "captured_at": UTC_TIME,
+    }
+    values.update(overrides)
+    return TechnicalSignalSnapshot(**values)
+
+
 class DataSourceEnumTests(unittest.TestCase):
     def test_all_data_source_categories(self):
         self.assertEqual(
@@ -104,6 +121,7 @@ class DataSourceEnumTests(unittest.TestCase):
                 "ON_CHAIN",
                 "NEWS",
                 "SOCIAL",
+                "ANALYTICS",
                 "UNKNOWN",
             ),
         )
@@ -123,6 +141,7 @@ class DataSourceEnumTests(unittest.TestCase):
                 "COINGLASS",
                 "ARKHAM",
                 "NANSEN",
+                "TRADINGVIEW",
                 "UNKNOWN",
             ),
         )
@@ -148,6 +167,7 @@ class SourceCategoryValidationTests(unittest.TestCase):
         for source in (
             DataSourceType.COINGLASS,
             DataSourceType.ARKHAM,
+            DataSourceType.TRADINGVIEW,
             DataSourceType.UNKNOWN,
         ):
             with self.subTest(source=source):
@@ -189,6 +209,88 @@ class SourceCategoryValidationTests(unittest.TestCase):
             market_snapshot(source_category=DataSourceCategory.DERIVATIVES)
         with self.assertRaises(ValueError):
             market_snapshot(source="NOT_A_SOURCE")
+
+
+class TradingViewAnalyticsContractTests(unittest.TestCase):
+    def test_tradingview_requires_analytics_category(self):
+        value = technical_signal_snapshot()
+        self.assertIs(value.source_category, DataSourceCategory.ANALYTICS)
+        self.assertIs(value.source, DataSourceType.TRADINGVIEW)
+
+        with self.assertRaises(ValueError):
+            technical_signal_snapshot(
+                source_category=DataSourceCategory.EXCHANGE
+            )
+
+    def test_analytics_category_accepts_only_tradingview(self):
+        for source in (
+            DataSourceType.BINANCE,
+            DataSourceType.COINGLASS,
+            DataSourceType.UNKNOWN,
+        ):
+            with self.subTest(source=source):
+                with self.assertRaises(ValueError):
+                    technical_signal_snapshot(source=source)
+
+    def test_required_analytics_text_is_validated(self):
+        for field_name in (
+            "symbol",
+            "timeframe",
+            "signal_type",
+            "direction",
+            "indicator_name",
+        ):
+            with self.subTest(field_name=field_name):
+                with self.assertRaises(ValueError):
+                    technical_signal_snapshot(**{field_name: " "})
+
+    def test_value_must_be_finite_and_not_boolean(self):
+        for invalid in (True, math.nan, math.inf, -math.inf):
+            with self.subTest(value=invalid):
+                with self.assertRaises((TypeError, ValueError)):
+                    technical_signal_snapshot(value=invalid)
+
+        self.assertEqual(technical_signal_snapshot(value=0).value, 0.0)
+        self.assertEqual(technical_signal_snapshot(value=-2).value, -2.0)
+
+    def test_tradingview_snapshot_is_frozen(self):
+        value = technical_signal_snapshot()
+        with self.assertRaises(FrozenInstanceError):
+            value.direction = "BEARISH"
+
+    def test_tradingview_serialization_round_trip_is_exact(self):
+        value = technical_signal_snapshot(
+            signal_type="Liquidity Sweep",
+            indicator_name="Custom Pine Observation",
+            value=-0.75,
+        )
+        restored = TechnicalSignalSnapshot.from_dict(value.to_dict())
+        self.assertEqual(restored, value)
+        self.assertEqual(restored.to_dict(), value.to_dict())
+
+    def test_tradingview_canonical_json_is_stable(self):
+        value = technical_signal_snapshot()
+        expected = json.dumps(
+            value.to_dict(),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        )
+        self.assertEqual(value.canonical_json(), expected)
+        self.assertEqual(value.canonical_json(), value.canonical_json())
+
+    def test_tradingview_timestamp_normalizes_to_utc(self):
+        offset = timezone(timedelta(hours=-4))
+        value = technical_signal_snapshot(
+            captured_at=datetime(2026, 7, 17, 8, 0, tzinfo=offset)
+        )
+        self.assertEqual(value.captured_at, UTC_TIME)
+
+        with self.assertRaises(ValueError):
+            technical_signal_snapshot(
+                captured_at=datetime(2026, 7, 17, 12, 0)
+            )
 
 
 class SnapshotContractTests(unittest.TestCase):
@@ -264,6 +366,7 @@ class SnapshotContractTests(unittest.TestCase):
             whale_snapshot(),
             smart_money_snapshot(),
             news_snapshot(),
+            technical_signal_snapshot(),
         ):
             with self.subTest(contract=type(value).__name__):
                 with self.assertRaises(FrozenInstanceError):
@@ -318,6 +421,17 @@ class SnapshotContractTests(unittest.TestCase):
                 "impact_level",
                 "captured_at",
             ),
+            TechnicalSignalSnapshot: (
+                "source_category",
+                "source",
+                "symbol",
+                "timeframe",
+                "signal_type",
+                "direction",
+                "indicator_name",
+                "value",
+                "captured_at",
+            ),
         }
         for contract_type, names in expected.items():
             with self.subTest(contract=contract_type.__name__):
@@ -332,6 +446,7 @@ class SnapshotContractTests(unittest.TestCase):
             whale_snapshot(),
             smart_money_snapshot(),
             news_snapshot(),
+            technical_signal_snapshot(),
         )
         for value in values:
             with self.subTest(contract=type(value).__name__):
@@ -346,6 +461,7 @@ class SnapshotContractTests(unittest.TestCase):
             whale_snapshot(),
             smart_money_snapshot(),
             news_snapshot(),
+            technical_signal_snapshot(),
         ):
             with self.subTest(contract=type(value).__name__):
                 self.assertEqual(value.canonical_json(), value.canonical_json())
@@ -387,6 +503,7 @@ class SnapshotContractTests(unittest.TestCase):
             whale_snapshot(),
             smart_money_snapshot(),
             news_snapshot(),
+            technical_signal_snapshot(),
         ):
             with self.subTest(contract=type(value).__name__):
                 self.assertTrue(forbidden.isdisjoint(value.to_dict()))

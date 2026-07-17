@@ -11,6 +11,7 @@ class DataSourceCategory(str, Enum):
     ON_CHAIN = "ON_CHAIN"
     NEWS = "NEWS"
     SOCIAL = "SOCIAL"
+    ANALYTICS = "ANALYTICS"
     UNKNOWN = "UNKNOWN"
 
 
@@ -26,6 +27,7 @@ class DataSourceType(str, Enum):
     COINGLASS = "COINGLASS"
     ARKHAM = "ARKHAM"
     NANSEN = "NANSEN"
+    TRADINGVIEW = "TRADINGVIEW"
     UNKNOWN = "UNKNOWN"
 
 
@@ -50,6 +52,10 @@ ON_CHAIN_SOURCES: FrozenSet[DataSourceType] = frozenset(
     {DataSourceType.ARKHAM, DataSourceType.NANSEN}
 )
 
+ANALYTICS_SOURCES: FrozenSet[DataSourceType] = frozenset(
+    {DataSourceType.TRADINGVIEW}
+)
+
 _UNKNOWN_ONLY: FrozenSet[DataSourceType] = frozenset(
     {DataSourceType.UNKNOWN}
 )
@@ -63,6 +69,7 @@ _CATEGORY_SOURCES: Mapping[
         DataSourceCategory.ON_CHAIN: ON_CHAIN_SOURCES,
         DataSourceCategory.NEWS: _UNKNOWN_ONLY,
         DataSourceCategory.SOCIAL: _UNKNOWN_ONLY,
+        DataSourceCategory.ANALYTICS: ANALYTICS_SOURCES,
         DataSourceCategory.UNKNOWN: _UNKNOWN_ONLY,
     }
 )

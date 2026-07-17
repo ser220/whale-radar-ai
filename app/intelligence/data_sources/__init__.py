@@ -6,6 +6,7 @@ from .models import (
     MarketSnapshot,
     NewsEventSnapshot,
     SmartMoneySnapshot,
+    TechnicalSignalSnapshot,
     WhaleActivitySnapshot,
 )
 
@@ -17,5 +18,6 @@ __all__ = [
     "MarketSnapshot",
     "NewsEventSnapshot",
     "SmartMoneySnapshot",
+    "TechnicalSignalSnapshot",
     "WhaleActivitySnapshot",
 ]

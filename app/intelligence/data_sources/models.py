@@ -367,10 +367,78 @@ class NewsEventSnapshot:
         return cls(**_snapshot_payload(cls, value))
 
 
+@dataclass(frozen=True)
+class TechnicalSignalSnapshot:
+    """External TradingView analysis observation without signal generation."""
+
+    source_category: DataSourceCategory
+    source: DataSourceType
+    symbol: str
+    timeframe: str
+    signal_type: str
+    direction: str
+    indicator_name: str
+    value: float
+    captured_at: datetime
+
+    def __post_init__(self) -> None:
+        category, source = _source_identity(
+            self.source_category,
+            self.source,
+            DataSourceCategory.ANALYTICS,
+        )
+        object.__setattr__(self, "source_category", category)
+        object.__setattr__(self, "source", source)
+        object.__setattr__(
+            self, "symbol", required_text(self.symbol, "symbol", uppercase=True)
+        )
+        object.__setattr__(
+            self, "timeframe", required_text(self.timeframe, "timeframe")
+        )
+        object.__setattr__(
+            self,
+            "signal_type",
+            required_text(self.signal_type, "signal_type"),
+        )
+        object.__setattr__(
+            self, "direction", required_text(self.direction, "direction")
+        )
+        object.__setattr__(
+            self,
+            "indicator_name",
+            required_text(self.indicator_name, "indicator_name"),
+        )
+        object.__setattr__(self, "value", finite_number(self.value, "value"))
+        object.__setattr__(
+            self, "captured_at", utc_datetime(self.captured_at)
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "source_category": self.source_category.value,
+            "source": self.source.value,
+            "symbol": self.symbol,
+            "timeframe": self.timeframe,
+            "signal_type": self.signal_type,
+            "direction": self.direction,
+            "indicator_name": self.indicator_name,
+            "value": self.value,
+            "captured_at": self.captured_at.isoformat(),
+        }
+
+    def canonical_json(self) -> str:
+        return canonical_json(self.to_dict())
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, Any]) -> "TechnicalSignalSnapshot":
+        return cls(**_snapshot_payload(cls, value))
+
+
 __all__ = [
     "DerivativesSnapshot",
     "MarketSnapshot",
     "NewsEventSnapshot",
     "SmartMoneySnapshot",
+    "TechnicalSignalSnapshot",
     "WhaleActivitySnapshot",
 ]
