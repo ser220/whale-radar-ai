@@ -451,6 +451,7 @@ class ArchitectureBoundaryTests(unittest.TestCase):
             "dataclasses",
             "datetime",
             "enum",
+            "json",
             "math",
             "numbers",
             "types",
