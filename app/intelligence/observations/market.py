@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import json
 from typing import Any, Dict, Mapping
 
 from app.intelligence.observations.base import (
@@ -113,15 +114,12 @@ class MarketObservation:
         }
 
     def canonical_json(self) -> str:
-        payload = self.to_dict()
-        items = sorted(payload.items())
-
-        return "{" + ",".join(
-            f'"{key}":"{value}"'
-            if isinstance(value, str)
-            else f'"{key}":{value}'
-            for key, value in items
-        ) + "}"
+        return json.dumps(
+            self.to_dict(),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
 
     @classmethod
     def from_dict(
