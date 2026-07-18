@@ -2,15 +2,12 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-import json
 from types import MappingProxyType
 from typing import Any, Dict, Mapping, Optional
 
 from app.intelligence.observations.base import (
     finite_number,
-    optional_finite_number,
     required_text,
-    frozen_metadata,
     parse_datetime,
 )
 
@@ -92,7 +89,7 @@ class MarketObservation:
         object.__setattr__(
             self,
             "reference_value",
-            optional_finite_number(
+            finite_number(
                 self.reference_value,
                 "reference_value",
             ),
@@ -107,13 +104,6 @@ class MarketObservation:
             ),
         )
 
-        object.__setattr__(
-            self,
-            "metadata",
-            frozen_metadata(
-                self.metadata,
-            ),
-        )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -130,11 +120,15 @@ class MarketObservation:
         }
 
     def canonical_json(self) -> str:
-        return json.dumps(
-            self.to_dict(),
-            sort_keys=True,
-            separators=(",", ":"),
-        )
+        payload = self.to_dict()
+        items = sorted(payload.items())
+
+        return "{" + ",".join(
+            f'"{key}":"{value}"'
+            if isinstance(value, str)
+            else f'"{key}":{value}'
+            for key, value in items
+        ) + "}"
 
     @classmethod
     def from_dict(
