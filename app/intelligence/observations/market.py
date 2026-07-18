@@ -1,9 +1,8 @@
 """Immutable normalized market observations without interpretations."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from types import MappingProxyType
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Mapping
 
 from app.intelligence.observations.base import (
     finite_number,
@@ -24,14 +23,10 @@ class MarketObservation:
     severity: str
 
     value: float
-    reference_value: Optional[float]
+    reference_value: float
 
     captured_at: datetime
 
-    version: int = 1
-    metadata: Mapping[str, Any] = field(
-        default_factory=lambda: MappingProxyType({})
-    )
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -115,8 +110,6 @@ class MarketObservation:
             "value": self.value,
             "reference_value": self.reference_value,
             "captured_at": self.captured_at.isoformat(),
-            "version": self.version,
-            "metadata": dict(self.metadata),
         }
 
     def canonical_json(self) -> str:
