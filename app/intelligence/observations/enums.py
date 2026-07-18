@@ -36,3 +36,11 @@ class DataTrend(str, Enum):
     FALLING = "FALLING"
     STABLE = "STABLE"
     UNKNOWN = "UNKNOWN"
+
+class MarketObservationType(str, Enum):
+    PRICE_MOVEMENT = "PRICE_MOVEMENT"
+    VOLUME_CHANGE = "VOLUME_CHANGE"
+    VOLATILITY_CHANGE = "VOLATILITY_CHANGE"
+    MARKET_STATE = "MARKET_STATE"
+
+
