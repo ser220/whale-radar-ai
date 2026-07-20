@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from app.decision.contracts import DecisionRecord
+
 
 
 class DecisionRepository:
@@ -49,4 +50,11 @@ class DecisionRepository:
         return (
             decision_id
             in self._records
+        )
+
+    def list_all(
+        self,
+    ) -> List[DecisionRecord]:
+        return list(
+            self._records.values()
         )
