@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from app.decision.audit import (
+    DecisionAudit,
+    DecisionAuditEventType,
+)
 from app.decision.builder import DecisionBuilder
 from app.decision.contracts import (
     DecisionRecord,
@@ -16,13 +20,14 @@ class DecisionGovernance:
     """
     Orchestration boundary for Decision Domain.
 
-    Coordinates builder, lifecycle, and repository only.
+    Coordinates builder, repository, lifecycle, and audit only.
     """
 
     def __init__(
         self,
         builder: DecisionBuilder | None = None,
         repository: DecisionRepository | None = None,
+        audit: DecisionAudit | None = None,
     ) -> None:
         self._builder = (
             builder
@@ -34,6 +39,12 @@ class DecisionGovernance:
             repository
             if repository is not None
             else DecisionRepository()
+        )
+
+        self._audit = (
+            audit
+            if audit is not None
+            else DecisionAudit()
         )
 
     def create(
@@ -48,9 +59,18 @@ class DecisionGovernance:
             confidence=confidence,
         )
 
-        return self._repository.save(
+        self._repository.save(
             record
         )
+
+        self._audit.record(
+            decision_id=record.decision_id,
+            event_type=(
+                DecisionAuditEventType.DECISION_CREATED
+            ),
+        )
+
+        return record
 
     def get(
         self,
@@ -72,9 +92,18 @@ class DecisionGovernance:
             record
         )
 
-        return self._repository.save(
+        self._repository.save(
             updated
         )
+
+        self._audit.record(
+            decision_id=updated.decision_id,
+            event_type=(
+                DecisionAuditEventType.DECISION_APPROVED
+            ),
+        )
+
+        return updated
 
     def reject(
         self,
@@ -88,9 +117,18 @@ class DecisionGovernance:
             record
         )
 
-        return self._repository.save(
+        self._repository.save(
             updated
         )
+
+        self._audit.record(
+            decision_id=updated.decision_id,
+            event_type=(
+                DecisionAuditEventType.DECISION_REJECTED
+            ),
+        )
+
+        return updated
 
     def _require_record(
         self,

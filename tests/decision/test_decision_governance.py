@@ -1,5 +1,8 @@
 from datetime import datetime, timezone
 
+from app.decision.audit import (
+    DecisionAudit,
+)
 from app.decision.contracts import (
     DecisionState,
     DecisionType,
@@ -27,7 +30,11 @@ def build_projection() -> CandidateDecisionInputProjection:
 
 
 def test_create_and_get_decision():
-    governance = DecisionGovernance()
+    audit = DecisionAudit()
+
+    governance = DecisionGovernance(
+        audit=audit,
+    )
 
     record = governance.create(
         projection=build_projection(),
@@ -40,14 +47,25 @@ def test_create_and_get_decision():
     )
 
     assert loaded is record
+
     assert (
         loaded.decision_state
         == DecisionState.CREATED
     )
 
+    events = audit.list_for_decision(
+        record.decision_id
+    )
+
+    assert len(events) == 1
+
 
 def test_approve_decision():
-    governance = DecisionGovernance()
+    audit = DecisionAudit()
+
+    governance = DecisionGovernance(
+        audit=audit,
+    )
 
     record = governance.create(
         projection=build_projection(),
@@ -64,9 +82,19 @@ def test_approve_decision():
         == DecisionState.APPROVED
     )
 
+    events = audit.list_for_decision(
+        record.decision_id
+    )
+
+    assert len(events) == 2
+
 
 def test_reject_decision():
-    governance = DecisionGovernance()
+    audit = DecisionAudit()
+
+    governance = DecisionGovernance(
+        audit=audit,
+    )
 
     record = governance.create(
         projection=build_projection(),
@@ -82,6 +110,12 @@ def test_reject_decision():
         rejected.decision_state
         == DecisionState.REJECTED
     )
+
+    events = audit.list_for_decision(
+        record.decision_id
+    )
+
+    assert len(events) == 2
 
 
 def test_missing_decision_rejected():
