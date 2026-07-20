@@ -11,8 +11,8 @@ from app.decision.contracts.enums import (
 @dataclass(frozen=True)
 class DecisionRecord:
     decision_id: str
-    candidate_id: str
-    situation_id: str
+    candidate_reference: str
+    intelligence_reference: str
     decision_type: DecisionType
     decision_state: DecisionState
     confidence: float
@@ -25,14 +25,14 @@ class DecisionRecord:
                 "decision_id is required"
             )
 
-        if not self.candidate_id:
+        if not self.candidate_reference:
             raise ValueError(
-                "candidate_id is required"
+                "candidate_reference is required"
             )
 
-        if not self.situation_id:
+        if not self.intelligence_reference:
             raise ValueError(
-                "situation_id is required"
+                "intelligence_reference is required"
             )
 
         if not isinstance(
