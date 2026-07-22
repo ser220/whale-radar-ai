@@ -5,3 +5,11 @@ __pycache__/
 data/
 logs/
 .DS_Store
+
+# Allow application data layer source code
+!app/data/
+!app/data/**
+
+# Allow data layer tests
+!tests/data/
+!tests/data/**
