@@ -1,4 +1,6 @@
 import sqlite3
+from typing import Optional
+
 from app.models.event import MarketEvent
 from app.config import DB_PATH
 
@@ -22,11 +24,42 @@ def init_db() -> None:
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS prediction_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        asset TEXT,
+        direction TEXT,
+        entry_price REAL,
+        target_price REAL,
+        expected_move REAL,
+        eta TEXT,
+        created_at TEXT,
+        outcome_checked INTEGER DEFAULT 0,
+        ai_snapshot TEXT
+    )
+    """)
+
+    try:
+        cursor.execute("""
+        ALTER TABLE prediction_history
+        ADD COLUMN outcome_checked INTEGER DEFAULT 0
+        """)
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        cursor.execute("""
+        ALTER TABLE prediction_history
+        ADD COLUMN ai_snapshot TEXT
+        """)
+    except sqlite3.OperationalError:
+        pass
+
     conn.commit()
     conn.close()
 
 
-def event_exists(tx_hash: str | None) -> bool:
+def event_exists(tx_hash: Optional[str]) -> bool:
     if not tx_hash:
         return False
 
@@ -35,10 +68,15 @@ def event_exists(tx_hash: str | None) -> bool:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    cursor.execute("SELECT id FROM events WHERE tx_hash = ?", (tx_hash,))
+    cursor.execute(
+        "SELECT id FROM events WHERE tx_hash = ?",
+        (tx_hash,),
+    )
+
     row = cursor.fetchone()
 
     conn.close()
+
     return row is not None
 
 
@@ -54,8 +92,15 @@ def save_event(event: MarketEvent) -> bool:
     try:
         cursor.execute("""
         INSERT INTO events (
-            source, event_type, asset, amount_usd,
-            from_entity, to_entity, network, tx_hash, timestamp
+            source,
+            event_type,
+            asset,
+            amount_usd,
+            from_entity,
+            to_entity,
+            network,
+            tx_hash,
+            timestamp
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
@@ -71,6 +116,7 @@ def save_event(event: MarketEvent) -> bool:
         ))
 
         conn.commit()
+
         return True
 
     except sqlite3.IntegrityError:
