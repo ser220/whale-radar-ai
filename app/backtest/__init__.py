@@ -53,6 +53,11 @@ from .recommendation import (
     RecommendationCalculator,
 )
 
+from .decision import (
+    BacktestDecisionReport,
+    DecisionReportCalculator,
+)
+
 __all__ = [
     "BacktestSessionResult",
     "BacktestSessionService",
@@ -81,5 +86,6 @@ __all__ = [
     "RankingCalculator",
     "BacktestRecommendation",
     "RecommendationCalculator",
-
+    "BacktestDecisionReport",
+    "DecisionReportCalculator",
 ]
