@@ -17,6 +17,11 @@ from .reporting import (
     BacktestReportGenerator,
 )
 
+from .analytics import (
+    BacktestAnalyticsCalculator,
+    BacktestAnalyticsReport,
+)
+
 __all__ = [
     "BacktestSessionResult",
     "BacktestSessionService",
@@ -25,4 +30,6 @@ __all__ = [
     "BacktestPerformanceReport",
     "BacktestReport",
     "BacktestReportGenerator",
+    "BacktestAnalyticsCalculator",
+    "BacktestAnalyticsReport",
 ]
