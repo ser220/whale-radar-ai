@@ -12,10 +12,17 @@ from .performance import (
     BacktestPerformanceReport,
 )
 
+from .reporting import (
+    BacktestReport,
+    BacktestReportGenerator,
+)
+
 __all__ = [
     "BacktestSessionResult",
     "BacktestSessionService",
     "BacktestSessionConfig",
     "BacktestPerformanceAggregator",
     "BacktestPerformanceReport",
+    "BacktestReport",
+    "BacktestReportGenerator",
 ]
