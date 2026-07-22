@@ -22,6 +22,18 @@ from .analytics import (
     BacktestAnalyticsReport,
 )
 
+from .equity import (
+    BacktestEquityCurve,
+    EquityCurveCalculator,
+    EquityPoint,
+)
+
+from .equity import (
+    BacktestEquityCurve,
+    EquityCurveCalculator,
+    EquityPoint,
+)
+
 __all__ = [
     "BacktestSessionResult",
     "BacktestSessionService",
@@ -32,4 +44,10 @@ __all__ = [
     "BacktestReportGenerator",
     "BacktestAnalyticsCalculator",
     "BacktestAnalyticsReport",
+    "BacktestEquityCurve",
+    "EquityCurveCalculator",
+    "EquityPoint",
+    "BacktestEquityCurve",
+    "EquityCurveCalculator",
+    "EquityPoint",
 ]
