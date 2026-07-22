@@ -38,6 +38,11 @@ from .benchmark import (
     BenchmarkCalculator,
 )
 
+from .evaluation import (
+    BacktestEvaluationReport,
+    BacktestEvaluationEvaluator,
+)
+
 __all__ = [
     "BacktestSessionResult",
     "BacktestSessionService",
@@ -59,5 +64,7 @@ __all__ = [
     "BacktestRiskReport",
     "RiskMetricsCalculator",
     "BacktestBenchmarkReport",
-    "BenchmarkCalculator",
+
+    "BacktestEvaluationReport",
+    "BacktestEvaluationEvaluator",
 ]
