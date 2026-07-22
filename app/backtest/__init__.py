@@ -28,10 +28,9 @@ from .equity import (
     EquityPoint,
 )
 
-from .equity import (
-    BacktestEquityCurve,
-    EquityCurveCalculator,
-    EquityPoint,
+from .risk import (
+    BacktestRiskReport,
+    RiskMetricsCalculator,
 )
 
 __all__ = [
@@ -50,4 +49,8 @@ __all__ = [
     "BacktestEquityCurve",
     "EquityCurveCalculator",
     "EquityPoint",
+    "BacktestRiskReport",
+    "RiskMetricsCalculator",
+    "BacktestRiskReport",
+    "RiskMetricsCalculator",
 ]
