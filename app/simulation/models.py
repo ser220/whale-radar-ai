@@ -1,0 +1,67 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime
+
+@dataclass(frozen=True)
+class SimulationSnapshot:
+    """
+    Immutable historical market snapshot.
+    """
+
+    symbol: str
+    price: float
+    volume_24h: float
+    volatility: float
+    timestamp: datetime
+
+    def __post_init__(self) -> None:
+
+        symbol = self.symbol.strip()
+
+        if not symbol:
+            raise ValueError(
+                "symbol is required"
+            )
+
+        if self.price <= 0:
+            raise ValueError(
+                "price must be positive"
+            )
+
+        if self.volume_24h < 0:
+            raise ValueError(
+                "volume_24h cannot be negative"
+            )
+
+        if self.volatility < 0:
+            raise ValueError(
+                "volatility cannot be negative"
+            )
+
+        object.__setattr__(
+            self,
+            "symbol",
+            symbol,
+        )
+
+
+@dataclass(frozen=True)
+class SimulationResult:
+    """
+    Immutable simulation execution result.
+    """
+
+    processed_snapshots: int
+    generated_trades: int
+
+    def __post_init__(self) -> None:
+        if self.processed_snapshots < 0:
+            raise ValueError(
+                "processed_snapshots cannot be negative"
+            )
+
+        if self.generated_trades < 0:
+            raise ValueError(
+                "generated_trades cannot be negative"
+            )
