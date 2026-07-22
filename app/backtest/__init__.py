@@ -58,6 +58,11 @@ from .decision import (
     DecisionReportCalculator,
 )
 
+from .report import (
+    BacktestFinalReport,
+    ReportGenerator,
+)
+
 __all__ = [
     "BacktestSessionResult",
     "BacktestSessionService",
@@ -88,4 +93,7 @@ __all__ = [
     "RecommendationCalculator",
     "BacktestDecisionReport",
     "DecisionReportCalculator",
+    "BacktestFinalReport",
+    "ReportGenerator",
+
 ]
