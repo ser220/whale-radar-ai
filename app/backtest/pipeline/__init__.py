@@ -4,9 +4,13 @@ from .models import (
 from .orchestrator import (
     BacktestPipelineOrchestrator,
 )
+from .serializer import (
+    BacktestPipelineSerializer,
+)
 
 
 __all__ = [
     "BacktestPipelineOrchestrator",
     "BacktestPipelineResult",
+    "BacktestPipelineSerializer",
 ]
