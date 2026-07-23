@@ -68,6 +68,11 @@ from .summary import (
     BacktestAISummary,
 )
 
+from .review import (
+    AIReviewGenerator,
+    BacktestAIReview,
+)
+
 __all__ = [
     "BacktestSessionResult",
     "BacktestSessionService",
@@ -102,5 +107,7 @@ __all__ = [
     "ReportGenerator",
     "AISummaryGenerator",
     "BacktestAISummary",
+    "AIReviewGenerator",
+    "BacktestAIReview",
 
 ]
