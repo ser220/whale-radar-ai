@@ -1,3 +1,6 @@
+from .json_exporter import (
+    BacktestPipelineJSONExporter,
+)
 from .models import (
     BacktestPipelineResult,
 )
@@ -10,6 +13,7 @@ from .serializer import (
 
 
 __all__ = [
+    "BacktestPipelineJSONExporter",
     "BacktestPipelineOrchestrator",
     "BacktestPipelineResult",
     "BacktestPipelineSerializer",
