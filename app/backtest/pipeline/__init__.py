@@ -13,6 +13,9 @@ from .orchestrator import (
 from .serializer import (
     BacktestPipelineSerializer,
 )
+from .timestamped_json_writer import (
+    BacktestPipelineTimestampedJSONWriter,
+)
 
 __all__ = [
     "BacktestPipelineJSONExporter",
@@ -20,4 +23,5 @@ __all__ = [
     "BacktestPipelineOrchestrator",
     "BacktestPipelineResult",
     "BacktestPipelineSerializer",
+    "BacktestPipelineTimestampedJSONWriter",
 ]
