@@ -24,6 +24,30 @@ class BacktestPipelineResult:
     review: BacktestAIReview
 
     def __post_init__(self) -> None:
+        if not isinstance(
+            self.report,
+            BacktestFinalReport,
+        ):
+            raise TypeError(
+                "report must be BacktestFinalReport"
+            )
+
+        if not isinstance(
+            self.summary,
+            BacktestAISummary,
+        ):
+            raise TypeError(
+                "summary must be BacktestAISummary"
+            )
+
+        if not isinstance(
+            self.review,
+            BacktestAIReview,
+        ):
+            raise TypeError(
+                "review must be BacktestAIReview"
+            )
+
         strategy_ids = {
             self.report.strategy_id,
             self.summary.strategy_id,
