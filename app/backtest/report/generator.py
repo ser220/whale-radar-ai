@@ -16,7 +16,7 @@ class ReportGenerator:
     def generate(
         self,
         decision: BacktestDecisionReport,
-    ) -> BacktestReport:
+    ) -> BacktestFinalReport:
 
         if not isinstance(
             decision,
