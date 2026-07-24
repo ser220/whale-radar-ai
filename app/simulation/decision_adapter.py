@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from app.decision.application import (
     DecisionApplicationService,
 )
@@ -21,7 +23,7 @@ class SimulationDecisionAdapter:
 
     def __init__(
         self,
-        application_service: DecisionApplicationService | None = None,
+        application_service: Optional[DecisionApplicationService] = None,
     ) -> None:
 
         self._application_service = (

@@ -1,9 +1,15 @@
 from datetime import datetime, timezone
+from inspect import signature
+from typing import get_type_hints, Optional
 
 from app.simulation import (
     SimulationSnapshot,
     SimulationMarketAdapter,
     SimulationDecisionAdapter,
+)
+
+from app.decision.application import (
+    DecisionApplicationService,
 )
 
 from app.intelligence.market_mapper import (
@@ -21,6 +27,29 @@ from app.decision.contracts import (
 from app.decision.external_contract import (
     DecisionResponse,
 )
+
+
+def test_simulation_decision_adapter_constructor_type_hints_resolve(
+) -> None:
+    type_hints = get_type_hints(
+        SimulationDecisionAdapter.__init__
+    )
+    parameters = signature(
+        SimulationDecisionAdapter.__init__
+    ).parameters
+
+    assert type_hints[
+        "application_service"
+    ] == Optional[
+        DecisionApplicationService
+    ]
+    assert (
+        parameters[
+            "application_service"
+        ].default
+        is None
+    )
+    assert type_hints["return"] is type(None)
 
 
 def test_simulation_to_decision_application_flow():
