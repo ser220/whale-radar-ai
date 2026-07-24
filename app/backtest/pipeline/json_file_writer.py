@@ -32,13 +32,15 @@ class BacktestPipelineJSONFileWriter:
         result: BacktestPipelineResult,
         output_file: Path,
     ) -> Path:
+        exported_json = self._exporter.export(result)
+
         output_file.parent.mkdir(
             parents=True,
             exist_ok=True,
         )
 
         output_file.write_text(
-            self._exporter.export(result),
+            exported_json,
             encoding="utf-8",
         )
 
