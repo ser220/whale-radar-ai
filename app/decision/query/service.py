@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
 from app.decision.read_model import (
     DecisionReadModelMapper,
@@ -20,7 +20,7 @@ class DecisionQueryService:
 
     def __init__(
         self,
-        repository: DecisionRepository | None = None,
+        repository: Optional[DecisionRepository] = None,
     ) -> None:
         self._repository = (
             repository
