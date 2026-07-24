@@ -42,16 +42,31 @@ class BacktestAIReview:
                 "invalid production readiness"
             )
 
+        object.__setattr__(
+            self,
+            "strengths",
+            tuple(self.strengths),
+        )
         if not self.strengths:
             raise ValueError(
                 "strengths cannot be empty"
             )
 
+        object.__setattr__(
+            self,
+            "risks",
+            tuple(self.risks),
+        )
         if not self.risks:
             raise ValueError(
                 "risks cannot be empty"
             )
 
+        object.__setattr__(
+            self,
+            "recommended_actions",
+            tuple(self.recommended_actions),
+        )
         if not self.recommended_actions:
             raise ValueError(
                 "recommended_actions cannot be empty"
