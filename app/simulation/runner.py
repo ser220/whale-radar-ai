@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, Optional
 
 from .models import (
     SimulationResult,
@@ -21,7 +21,7 @@ class SimulationRunner:
 
     def __init__(
         self,
-        strategy: SimulationStrategyAdapter | None = None,
+        strategy: Optional[SimulationStrategyAdapter] = None,
     ) -> None:
 
         self._strategy = (
