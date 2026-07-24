@@ -71,6 +71,34 @@ def test_ai_review_generator_reject() -> None:
     assert review.confidence == 0.40
 
 
+@pytest.mark.parametrize(
+    "decision",
+    [
+        "",
+        " ",
+        "UNKNOWN",
+        "pass",
+        "REVEIW",
+        " pass ",
+        "PASS ",
+        " pass",
+    ],
+)
+def test_ai_review_generator_rejects_invalid_decision_without_normalizing(
+    decision: str,
+) -> None:
+    with pytest.raises(ValueError) as raised:
+        AIReviewGenerator().generate(
+            strategy_id="strategy-invalid",
+            decision=decision,
+            confidence=0.50,
+        )
+
+    assert str(raised.value) == (
+        "invalid decision"
+    )
+
+
 def test_backtest_ai_review_rejects_invalid_confidence() -> None:
     with pytest.raises(
         ValueError,

@@ -51,7 +51,7 @@ class AIReviewGenerator:
                 "Perform extended testing",
             )
 
-        else:
+        elif decision == "REJECT":
 
             verdict = "REJECT"
             readiness = "NOT_READY"
@@ -66,6 +66,11 @@ class AIReviewGenerator:
 
             actions = (
                 "Revise strategy before retesting",
+            )
+
+        else:
+            raise ValueError(
+                "invalid decision"
             )
 
         return BacktestAIReview(
