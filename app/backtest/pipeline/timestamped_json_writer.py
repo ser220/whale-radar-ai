@@ -2,6 +2,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
 
+from app.backtest.pipeline.export_filename_policy import (
+    BacktestPipelineExportFilenamePolicy,
+)
 from app.backtest.pipeline.json_file_writer import (
     BacktestPipelineJSONFileWriter,
 )
@@ -24,6 +27,9 @@ class BacktestPipelineTimestampedJSONWriter:
         now_provider: Optional[
             Callable[[], datetime]
         ] = None,
+        filename_policy: Optional[
+            BacktestPipelineExportFilenamePolicy
+        ] = None,
     ) -> None:
         self._file_writer = (
             file_writer
@@ -35,6 +41,11 @@ class BacktestPipelineTimestampedJSONWriter:
             if now_provider is not None
             else self._utc_now
         )
+        self._filename_policy = (
+            filename_policy
+            if filename_policy is not None
+            else BacktestPipelineExportFilenamePolicy()
+        )
 
     def write(
         self,
@@ -45,10 +56,11 @@ class BacktestPipelineTimestampedJSONWriter:
             self._now_provider()
         )
 
-        output_file = output_directory / (
-            f"{result.report.strategy_id}"
-            f"-{timestamp}.json"
+        filename = self._filename_policy.build_filename(
+            strategy_id=result.report.strategy_id,
+            timestamp=timestamp,
         )
+        output_file = output_directory / filename
 
         return self._file_writer.write(
             result=result,
