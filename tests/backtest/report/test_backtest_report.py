@@ -1,3 +1,5 @@
+from typing import get_type_hints
+
 from app.backtest.report import (
     BacktestFinalReport,
     ReportGenerator,
@@ -6,6 +8,16 @@ from app.backtest.report import (
 from app.backtest.decision import (
     BacktestDecisionReport,
 )
+
+
+def test_report_generator_return_type_hint_resolves() -> None:
+    type_hints = get_type_hints(
+        ReportGenerator.generate
+    )
+
+    assert type_hints["return"] is (
+        BacktestFinalReport
+    )
 
 
 def test_backtest_report():
