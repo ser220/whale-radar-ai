@@ -86,15 +86,10 @@ __all__ = [
     "BacktestEquityCurve",
     "EquityCurveCalculator",
     "EquityPoint",
-    "BacktestEquityCurve",
-    "EquityCurveCalculator",
-    "EquityPoint",
-    "BacktestRiskReport",
-    "RiskMetricsCalculator",
     "BacktestRiskReport",
     "RiskMetricsCalculator",
     "BacktestBenchmarkReport",
-
+    "BenchmarkCalculator",
     "BacktestEvaluationReport",
     "BacktestEvaluationEvaluator",
     "BacktestStrategyRanking",
@@ -109,5 +104,4 @@ __all__ = [
     "BacktestAISummary",
     "AIReviewGenerator",
     "BacktestAIReview",
-
 ]
