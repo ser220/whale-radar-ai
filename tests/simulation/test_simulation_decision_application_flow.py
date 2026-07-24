@@ -106,3 +106,46 @@ def test_simulation_to_decision_application_flow():
         response.confidence
         == 0.85
     )
+
+
+def test_default_service_retrieves_decision_created_through_adapter(
+) -> None:
+    simulation_snapshot = SimulationSnapshot(
+        symbol="BTCUSDT",
+        price=65000.0,
+        volume_24h=1000000000.0,
+        volatility=0.03,
+        timestamp=datetime.now(
+            timezone.utc
+        ),
+    )
+
+    market_snapshot = (
+        SimulationMarketAdapter
+        .to_market_snapshot(
+            simulation_snapshot
+        )
+    )
+
+    projection = (
+        MarketDecisionInputMapper
+        .from_snapshot(
+            market_snapshot
+        )
+    )
+
+    service = DecisionApplicationService()
+    adapter = SimulationDecisionAdapter(
+        application_service=service,
+    )
+
+    created = adapter.create_decision(
+        projection=projection,
+        confidence=0.85,
+    )
+    retrieved = service.get_decision(
+        created.decision_id
+    )
+
+    assert retrieved is not None
+    assert retrieved == created

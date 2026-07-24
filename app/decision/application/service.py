@@ -14,6 +14,9 @@ from app.decision.governance import (
 from app.decision.query import (
     DecisionQueryService,
 )
+from app.decision.repository import (
+    DecisionRepository,
+)
 from app.intelligence.candidate_decision_input.models import (
     CandidateDecisionInputProjection,
 )
@@ -31,6 +34,11 @@ class DecisionApplicationService:
         governance: DecisionGovernance | None = None,
         query_service: DecisionQueryService | None = None,
     ) -> None:
+        if governance is None and query_service is None:
+            repository = DecisionRepository()
+            governance = DecisionGovernance(repository=repository)
+            query_service = DecisionQueryService(repository=repository)
+
         self._governance = (
             governance
             if governance is not None
