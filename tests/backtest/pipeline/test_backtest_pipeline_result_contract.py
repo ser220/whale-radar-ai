@@ -32,10 +32,19 @@ class SpecializedAIReview(
     pass
 
 
-def _build_report() -> BacktestFinalReport:
+class ContradictoryReviewLike:
+    strategy_id = "strategy-contract"
+    verdict = "REJECT"
+    production_readiness = "NOT_READY"
+    confidence = 0.92
+
+
+def _build_report(
+    decision: str = "PASS",
+) -> BacktestFinalReport:
     return BacktestFinalReport(
         strategy_id="strategy-contract",
-        decision="PASS",
+        decision=decision,
         rank=1,
         score=92.0,
         confidence=0.92,
@@ -43,10 +52,12 @@ def _build_report() -> BacktestFinalReport:
     )
 
 
-def _build_summary() -> BacktestAISummary:
+def _build_summary(
+    decision: str = "PASS",
+) -> BacktestAISummary:
     return BacktestAISummary(
         strategy_id="strategy-contract",
-        decision="PASS",
+        decision=decision,
         headline="Strategy approved",
         explanation="Strong performance",
         risk_level="LOW",
@@ -54,11 +65,16 @@ def _build_summary() -> BacktestAISummary:
     )
 
 
-def _build_review() -> BacktestAIReview:
+def _build_review(
+    verdict: str = "APPROVE",
+    production_readiness: str = "READY",
+) -> BacktestAIReview:
     return BacktestAIReview(
         strategy_id="strategy-contract",
-        verdict="APPROVE",
-        production_readiness="READY",
+        verdict=verdict,
+        production_readiness=(
+            production_readiness
+        ),
         strengths=(
             "Strong backtest performance",
         ),
@@ -86,6 +102,118 @@ def test_pipeline_result_accepts_valid_nested_contracts() -> None:
     assert result.report is report
     assert result.summary is summary
     assert result.review is review
+
+
+@pytest.mark.parametrize(
+    (
+        "decision",
+        "verdict",
+        "production_readiness",
+    ),
+    [
+        (
+            "PASS",
+            "APPROVE",
+            "READY",
+        ),
+        (
+            "REVIEW",
+            "CONDITIONAL",
+            "LIMITED",
+        ),
+        (
+            "REJECT",
+            "REJECT",
+            "NOT_READY",
+        ),
+    ],
+)
+def test_pipeline_result_accepts_consistent_decision_review_states(
+    decision: str,
+    verdict: str,
+    production_readiness: str,
+) -> None:
+    result = BacktestPipelineResult(
+        report=_build_report(
+            decision=decision,
+        ),
+        summary=_build_summary(
+            decision=decision,
+        ),
+        review=_build_review(
+            verdict=verdict,
+            production_readiness=(
+                production_readiness
+            ),
+        ),
+    )
+
+    assert result.summary.decision == decision
+    assert result.review.verdict == verdict
+    assert (
+        result.review.production_readiness
+        == production_readiness
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "decision",
+        "verdict",
+        "production_readiness",
+    ),
+    [
+        (
+            "PASS",
+            "REJECT",
+            "NOT_READY",
+        ),
+        (
+            "REVIEW",
+            "APPROVE",
+            "READY",
+        ),
+        (
+            "REJECT",
+            "CONDITIONAL",
+            "LIMITED",
+        ),
+        (
+            "PASS",
+            "REJECT",
+            "READY",
+        ),
+        (
+            "PASS",
+            "APPROVE",
+            "NOT_READY",
+        ),
+    ],
+)
+def test_pipeline_result_rejects_inconsistent_decision_review_states(
+    decision: str,
+    verdict: str,
+    production_readiness: str,
+) -> None:
+    with pytest.raises(ValueError) as raised:
+        BacktestPipelineResult(
+            report=_build_report(
+                decision=decision,
+            ),
+            summary=_build_summary(
+                decision=decision,
+            ),
+            review=_build_review(
+                verdict=verdict,
+                production_readiness=(
+                    production_readiness
+                ),
+            ),
+        )
+
+    assert str(raised.value) == (
+        "summary decision and review state must match"
+    )
 
 
 def test_pipeline_result_rejects_invalid_report_before_attribute_access(
@@ -125,6 +253,20 @@ def test_pipeline_result_rejects_invalid_review_before_attribute_access(
             summary=_build_summary(),
             review=object(),
         )
+
+
+def test_nested_type_validation_precedes_decision_review_consistency(
+) -> None:
+    with pytest.raises(TypeError) as raised:
+        BacktestPipelineResult(
+            report=_build_report(),
+            summary=_build_summary(),
+            review=ContradictoryReviewLike(),
+        )
+
+    assert str(raised.value) == (
+        "review must be BacktestAIReview"
+    )
 
 
 def test_pipeline_result_accepts_nested_contract_subclasses() -> None:

@@ -68,3 +68,28 @@ class BacktestPipelineResult:
             raise ValueError(
                 "summary and review confidence must match"
             )
+
+        expected_review_state = {
+            "PASS": (
+                "APPROVE",
+                "READY",
+            ),
+            "REVIEW": (
+                "CONDITIONAL",
+                "LIMITED",
+            ),
+            "REJECT": (
+                "REJECT",
+                "NOT_READY",
+            ),
+        }[self.summary.decision]
+
+        review_state = (
+            self.review.verdict,
+            self.review.production_readiness,
+        )
+
+        if review_state != expected_review_state:
+            raise ValueError(
+                "summary decision and review state must match"
+            )
