@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from inspect import signature
+from typing import get_type_hints, Optional
 
 import pytest
 
@@ -6,6 +8,7 @@ from app.simulation import (
     SimulationResult,
     SimulationRunner,
     SimulationSnapshot,
+    SimulationStrategyAdapter,
 )
 
 
@@ -21,6 +24,21 @@ def create_snapshot(
             timezone.utc
         ),
     )
+
+
+def test_simulation_runner_constructor_type_hints_resolve() -> None:
+    type_hints = get_type_hints(
+        SimulationRunner.__init__
+    )
+    parameters = signature(
+        SimulationRunner.__init__
+    ).parameters
+
+    assert type_hints["strategy"] == Optional[
+        SimulationStrategyAdapter
+    ]
+    assert parameters["strategy"].default is None
+    assert type_hints["return"] is type(None)
 
 
 def test_snapshot_creation():
