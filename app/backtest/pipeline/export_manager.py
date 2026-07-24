@@ -27,12 +27,14 @@ class BacktestPipelineExportManager:
     ) -> None:
         self.file_writer = (
             file_writer
-            or BacktestPipelineJSONFileWriter()
+            if file_writer is not None
+            else BacktestPipelineJSONFileWriter()
         )
 
         self.timestamped_writer = (
             timestamped_writer
-            or BacktestPipelineTimestampedJSONWriter()
+            if timestamped_writer is not None
+            else BacktestPipelineTimestampedJSONWriter()
         )
 
     def export_json(
