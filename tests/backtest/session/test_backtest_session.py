@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from inspect import signature
+from typing import get_type_hints, Optional
 
 from app.backtest import (
     BacktestSessionConfig,
@@ -8,6 +10,7 @@ from app.backtest import (
 
 from app.simulation import (
     SimulationResult,
+    SimulationRunner,
     SimulationSnapshot,
 )
 
@@ -24,6 +27,21 @@ def build_config() -> BacktestSessionConfig:
         end_time=now,
         initial_balance=10000.0,
     )
+
+
+def test_session_service_constructor_type_hints_resolve() -> None:
+    type_hints = get_type_hints(
+        BacktestSessionService.__init__
+    )
+    parameters = signature(
+        BacktestSessionService.__init__
+    ).parameters
+
+    assert type_hints["runner"] == Optional[
+        SimulationRunner
+    ]
+    assert parameters["runner"].default is None
+    assert type_hints["return"] is type(None)
 
 
 def test_backtest_session_result_model():

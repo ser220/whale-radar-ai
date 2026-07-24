@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Iterable
+from typing import Iterable, Optional
 
 from app.backtest.config import (
     BacktestSessionConfig,
@@ -24,7 +24,7 @@ class BacktestSessionService:
 
     def __init__(
         self,
-        runner: SimulationRunner | None = None,
+        runner: Optional[SimulationRunner] = None,
     ) -> None:
 
         self._runner = (
