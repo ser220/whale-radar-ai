@@ -50,3 +50,9 @@ class BacktestEquityCurve:
             raise ValueError(
                 "max_drawdown cannot be negative"
             )
+
+        object.__setattr__(
+            self,
+            "points",
+            tuple(self.points),
+        )
