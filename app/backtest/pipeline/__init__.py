@@ -1,6 +1,9 @@
 from .export_manager import (
     BacktestPipelineExportManager,
 )
+from .export_filename_policy import (
+    BacktestPipelineExportFilenamePolicy,
+)
 from .json_exporter import (
     BacktestPipelineJSONExporter,
 )
@@ -22,6 +25,7 @@ from .timestamped_json_writer import (
 
 
 __all__ = [
+    "BacktestPipelineExportFilenamePolicy",
     "BacktestPipelineExportManager",
     "BacktestPipelineJSONExporter",
     "BacktestPipelineJSONFileWriter",

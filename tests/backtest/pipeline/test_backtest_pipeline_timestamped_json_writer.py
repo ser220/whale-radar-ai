@@ -2,6 +2,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pytest
+
 from app.backtest.pipeline.orchestrator import (
     BacktestPipelineOrchestrator,
 )
@@ -151,4 +153,72 @@ def test_timestamped_json_writer_treats_naive_time_as_utc(
 
     assert written_file.name == (
         "strategy-theta-20260724T060504Z.json"
+    )
+
+
+def test_timestamped_json_writer_rejects_before_directory_creation(
+    tmp_path: Path,
+) -> None:
+    report = BacktestFinalReport(
+        strategy_id="../strategy",
+        decision="PASS",
+        rank=1,
+        score=95.0,
+        confidence=0.95,
+        summary="Unsafe strategy identifier",
+    )
+    result = BacktestPipelineOrchestrator().run(
+        report=report,
+        risk_level="LOW",
+    )
+    output_directory = tmp_path / "missing" / "exports"
+    writer = BacktestPipelineTimestampedJSONWriter()
+
+    with pytest.raises(ValueError):
+        writer.write(
+            result=result,
+            output_directory=output_directory,
+        )
+
+    assert not output_directory.exists()
+    assert list(tmp_path.rglob("*")) == []
+
+
+def test_timestamped_json_writer_output_is_direct_child(
+    tmp_path: Path,
+) -> None:
+    report = BacktestFinalReport(
+        strategy_id="strategy-direct-child",
+        decision="PASS",
+        rank=1,
+        score=95.0,
+        confidence=0.95,
+        summary="Safe strategy identifier",
+    )
+    result = BacktestPipelineOrchestrator().run(
+        report=report,
+        risk_level="LOW",
+    )
+    fixed_now = datetime(
+        2026,
+        7,
+        24,
+        12,
+        0,
+        0,
+        tzinfo=timezone.utc,
+    )
+    output_directory = tmp_path / "exports"
+    writer = BacktestPipelineTimestampedJSONWriter(
+        now_provider=lambda: fixed_now,
+    )
+
+    written_file = writer.write(
+        result=result,
+        output_directory=output_directory,
+    )
+
+    assert written_file.parent == output_directory
+    assert written_file.name == (
+        "strategy-direct-child-20260724T120000Z.json"
     )
