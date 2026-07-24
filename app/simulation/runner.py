@@ -26,7 +26,8 @@ class SimulationRunner:
 
         self._strategy = (
             strategy
-            or SimulationStrategyAdapter()
+            if strategy is not None
+            else SimulationStrategyAdapter()
         )
 
     def run(
