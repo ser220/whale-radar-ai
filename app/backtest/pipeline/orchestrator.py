@@ -26,11 +26,13 @@ class BacktestPipelineOrchestrator:
     ) -> None:
         self._summary_generator = (
             summary_generator
-            or AISummaryGenerator()
+            if summary_generator is not None
+            else AISummaryGenerator()
         )
         self._review_generator = (
             review_generator
-            or AIReviewGenerator()
+            if review_generator is not None
+            else AIReviewGenerator()
         )
 
     def run(
