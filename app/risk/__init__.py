@@ -1,8 +1,10 @@
-from .enums import RiskLevel
-from .models import RiskScore
+from .enums import RiskFactor, RiskLevel
+from .models import RiskComponent, RiskScore
 
 
 __all__ = [
+    "RiskComponent",
+    "RiskFactor",
     "RiskLevel",
     "RiskScore",
 ]
