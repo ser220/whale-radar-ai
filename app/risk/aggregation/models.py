@@ -39,9 +39,19 @@ class RiskAggregationPolicy:
 
             normalized[factor] = float(weight)
 
-        if not normalized:
+        missing_factors = set(RiskFactor) - set(normalized)
+
+        if missing_factors:
+            missing_names = ", ".join(
+                factor.name
+                for factor in sorted(
+                    missing_factors,
+                    key=lambda item: item.value,
+                )
+            )
             raise ValueError(
-                "At least one aggregation weight must be configured."
+                "Missing aggregation weights for: "
+                f"{missing_names}."
             )
 
         if not any(weight > 0.0 for weight in normalized.values()):
@@ -75,19 +85,16 @@ class RiskAggregationPolicy:
             "weights",
             MappingProxyType(normalized),
         )
-
         object.__setattr__(
             self,
             "medium_score_threshold",
             medium,
         )
-
         object.__setattr__(
             self,
             "high_score_threshold",
             high,
         )
-
         object.__setattr__(
             self,
             "extreme_score_threshold",
@@ -100,3 +107,64 @@ class AggregatedRiskScore:
     total_score: float
     level: RiskLevel
     components: Tuple[RiskComponent, ...]
+
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.total_score, bool)
+            or not isinstance(self.total_score, (int, float))
+        ):
+            raise TypeError("total_score must be a real number.")
+
+        if not math.isfinite(self.total_score):
+            raise ValueError("total_score must be finite.")
+
+        normalized_score = float(self.total_score)
+
+        if not 0.0 <= normalized_score <= 100.0:
+            raise ValueError(
+                "total_score must be between 0 and 100."
+            )
+
+        if not isinstance(self.level, RiskLevel):
+            raise TypeError("level must be RiskLevel.")
+
+        normalized_components = tuple(self.components)
+
+        if not normalized_components:
+            raise ValueError(
+                "At least one risk component is required."
+            )
+
+        for component in normalized_components:
+            if not isinstance(component, RiskComponent):
+                raise TypeError(
+                    "All components must be RiskComponent."
+                )
+
+        seen_factors = set()
+
+        for component in normalized_components:
+            if component.factor in seen_factors:
+                raise ValueError(
+                    f"Duplicate risk factor: {component.factor.name}."
+                )
+
+            seen_factors.add(component.factor)
+
+        normalized_components = tuple(
+            sorted(
+                normalized_components,
+                key=lambda component: component.factor.value,
+            )
+        )
+
+        object.__setattr__(
+            self,
+            "total_score",
+            normalized_score,
+        )
+        object.__setattr__(
+            self,
+            "components",
+            normalized_components,
+        )
