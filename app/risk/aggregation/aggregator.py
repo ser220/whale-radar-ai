@@ -14,8 +14,12 @@ class RiskAggregator:
         components: Iterable[RiskComponent],
         policy: RiskAggregationPolicy,
     ) -> AggregatedRiskScore:
-        normalized_components = tuple(components)
-
+        normalized_components = tuple(
+            sorted(
+                components,
+                key=lambda component: component.factor.value,
+            )
+        )
         if not normalized_components:
             raise ValueError(
                 "At least one risk component is required for aggregation."

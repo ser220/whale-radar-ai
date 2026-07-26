@@ -100,11 +100,10 @@ def test_zero_weight_component_is_ignored() -> None:
     assert result.level is RiskLevel.MEDIUM
 
 
-def test_components_are_preserved_as_tuple_in_input_order() -> None:
-    components = [
-        build_component(RiskFactor.CVD, 20.0),
-        build_component(RiskFactor.FUNDING, 40.0),
-    ]
+def test_components_are_sorted_by_risk_factor_value() -> None:
+    funding_component = build_component(RiskFactor.FUNDING, 40.0)
+    cvd_component = build_component(RiskFactor.CVD, 20.0)
+
     policy = build_policy(
         weights={
             RiskFactor.CVD: 1.0,
@@ -112,10 +111,19 @@ def test_components_are_preserved_as_tuple_in_input_order() -> None:
         },
     )
 
-    result = RiskAggregator().aggregate(components, policy)
+    result = RiskAggregator().aggregate(
+        [
+            funding_component,
+            cvd_component,
+        ],
+        policy,
+    )
 
     assert isinstance(result.components, tuple)
-    assert result.components == tuple(components)
+    assert result.components == (
+        cvd_component,
+        funding_component,
+    )
 
 
 def test_generator_input_is_supported() -> None:
