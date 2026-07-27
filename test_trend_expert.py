@@ -337,6 +337,7 @@ class TrendExpertScoringTests(unittest.TestCase):
         opinion = evaluate(expert=TrendExpert(policy))
         self.assertEqual(opinion.direction, Direction.NEUTRAL)
 
+
     def test_score_and_confidence_are_bounded(self):
         opinion = evaluate()
         self.assertGreaterEqual(opinion.score, 0)

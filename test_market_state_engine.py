@@ -120,6 +120,18 @@ class MarketStateEngineTests(unittest.TestCase):
         self.assertEqual(result.trend, TrendState.UNKNOWN)
         self.assertTrue(any("State disagreement" in item for item in result.warnings))
 
+    def test_direction_does_not_imply_trend_state(self):
+        result = self.synthesize(
+            [
+                opinion("Trend", Direction.BULLISH, "TREND"),
+                opinion("Correction", Direction.BULLISH, "CORRECTION"),
+            ]
+        )
+
+        self.assertEqual(result.direction, Direction.BULLISH)
+        self.assertEqual(result.trend, TrendState.UNKNOWN)
+        self.assertTrue(any("State disagreement" in item for item in result.warnings))
+
     def test_duplicate_expert_names_are_rejected(self):
         with self.assertRaisesRegex(ValueError, "duplicate expert opinion"):
             self.synthesize([opinion("Trend"), opinion("Trend")])
