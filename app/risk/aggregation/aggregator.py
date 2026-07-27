@@ -1,10 +1,10 @@
-from typing import Iterable, Tuple
+from typing import Iterable
 
 from app.risk.aggregation.models import (
     AggregatedRiskScore,
     RiskAggregationPolicy,
 )
-from app.risk.enums import RiskFactor, RiskLevel
+from app.risk.enums import RiskLevel
 from app.risk.models import RiskComponent
 
 
@@ -14,12 +14,25 @@ class RiskAggregator:
         components: Iterable[RiskComponent],
         policy: RiskAggregationPolicy,
     ) -> AggregatedRiskScore:
-        normalized_components = tuple(components)
+        received_components = tuple(components)
 
-        if not normalized_components:
+        if not received_components:
             raise ValueError(
                 "At least one risk component is required for aggregation."
             )
+
+        for component in received_components:
+            if not isinstance(component, RiskComponent):
+                raise TypeError(
+                    "All aggregation components must be RiskComponent."
+                )
+
+        normalized_components = tuple(
+            sorted(
+                received_components,
+                key=lambda component: component.factor.value,
+            )
+        )
 
         seen_factors = set()
 
@@ -39,7 +52,7 @@ class RiskAggregator:
 
             if weight is None:
                 raise ValueError(
-                    f"No aggregation weight configured for "
+                    "No aggregation weight configured for "
                     f"{component.factor.name}."
                 )
 
