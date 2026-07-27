@@ -68,44 +68,6 @@ Duplicate factors are rejected because silently replacing, averaging, or
 selecting one duplicate would make aggregation ambiguous.
 
 An empty component collection is rejected.
-## Missing factors
-
-A policy may define weights for factors that are absent from the current
-component collection.
-
-Absent factors do not contribute to either:
-
-- the weighted numerator;
-- the active weight denominator.
-
-This prevents missing data from being interpreted as zero risk.
-
-The aggregate score is calculated only from supplied factors whose configured
-weight is greater than zero.
-
-If all supplied factors have zero configured weight, aggregation is rejected.
-
-## Formula
-
-For every supplied component with a positive configured weight:
-
-```text
-weighted_score =
-    component.score * factor_weight
-
-
-The aggregate score is:
-
-```text
-total_score =
-    sum(weighted_score)
-    / sum(active_factor_weights)
-```
-
-The result always remains within `0..100` because every component score is
-validated within `0..100` and all active weights are non-negative.
-
-No additional score capping is required.
 
 ## Missing factors
 
