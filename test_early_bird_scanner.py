@@ -62,6 +62,22 @@ class FakeCandleSource:
         return candles(normalized)
 
 
+class FakeFundingService:
+    def __init__(self):
+        self.calls = []
+
+    def build(self, asset):
+        normalized = asset.upper().replace("USDT", "")
+        self.calls.append(normalized)
+        return {
+            "status": "unavailable",
+            "asset": normalized,
+            "exchanges": {},
+            "unavailable_exchanges": {},
+            "captured_at": NOW.isoformat(),
+        }
+
+
 class TrackingEngine:
     def __init__(self):
         self.calls = 0
@@ -76,9 +92,16 @@ class TrackingEngine:
         )
 
 
-def scan(assets=("BTC", "ETH"), source=None, engine=None, **overrides):
+def scan(
+    assets=("BTC", "ETH"),
+    source=None,
+    engine=None,
+    funding_service=None,
+    **overrides
+):
     scanner = EarlyBirdScanner(
         candle_source=source or FakeCandleSource(),
+        funding_service=funding_service or FakeFundingService(),
         engine=engine,
     )
     arguments = {
@@ -115,6 +138,14 @@ class ScannerTests(unittest.TestCase):
             [("BTC", "15m"), ("ETH", "15m"), ("SOL", "15m")],
             source.calls,
         )
+
+    def test_scanner_fetches_funding_once_per_requested_asset(self):
+        funding_service = FakeFundingService()
+        scan(
+            ("BTC", "ETH", "SOL"),
+            funding_service=funding_service,
+        )
+        self.assertEqual(["BTC", "ETH", "SOL"], funding_service.calls)
 
     def test_one_asset_failure_does_not_abort(self):
         result = scan(
@@ -301,6 +332,30 @@ class DependencyBoundaryTests(unittest.TestCase):
         self.assertEqual(
             ("app.sources.binance_candle_source",),
             source_imports,
+        )
+
+    def test_only_unified_funding_service_boundary_is_imported(self):
+        imports = runtime_imports(
+            "app/intelligence/early_bird/scanner/scanner.py"
+        )
+        service_imports = tuple(
+            item for item in imports if item.startswith("app.services")
+        )
+        self.assertEqual(
+            ("app.services.unified_funding_hub",),
+            service_imports,
+        )
+
+    def test_funding_factor_has_no_provider_imports(self):
+        imports = runtime_imports(
+            "app/intelligence/early_bird/scanner/funding_factor.py"
+        )
+        application_imports = tuple(
+            item for item in imports if item.startswith("app.")
+        )
+        self.assertEqual(
+            ("app.intelligence.early_bird.availability",),
+            application_imports,
         )
 
 
