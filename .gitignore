@@ -13,3 +13,7 @@ logs/
 # Allow data layer tests
 !tests/data/
 !tests/data/**
+
+# Keep Python cache files ignored after data-layer exceptions
+__pycache__/
+*.pyc
