@@ -20,17 +20,32 @@ class DecisionRecord:
     contract_version: DecisionContractVersion
 
     def __post_init__(self):
-        if not self.decision_id:
+        if not isinstance(self.decision_id, str):
+            raise TypeError(
+                "decision_id must be a string"
+            )
+
+        if not self.decision_id.strip():
             raise ValueError(
                 "decision_id is required"
             )
 
-        if not self.candidate_reference:
+        if not isinstance(self.candidate_reference, str):
+            raise TypeError(
+                "candidate_reference must be a string"
+            )
+
+        if not self.candidate_reference.strip():
             raise ValueError(
                 "candidate_reference is required"
             )
 
-        if not self.intelligence_reference:
+        if not isinstance(self.intelligence_reference, str):
+            raise TypeError(
+                "intelligence_reference must be a string"
+            )
+
+        if not self.intelligence_reference.strip():
             raise ValueError(
                 "intelligence_reference is required"
             )
@@ -60,9 +75,12 @@ class DecisionRecord:
                 "DecisionContractVersion"
             )
 
-        if not isinstance(
-            self.confidence,
-            (int, float),
+        if (
+            isinstance(self.confidence, bool)
+            or not isinstance(
+                self.confidence,
+                (int, float),
+            )
         ):
             raise TypeError(
                 "confidence must be numeric"
@@ -71,6 +89,11 @@ class DecisionRecord:
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError(
                 "confidence must be between 0 and 1"
+            )
+
+        if not isinstance(self.created_at, datetime):
+            raise TypeError(
+                "created_at must be datetime"
             )
 
         if self.created_at.tzinfo is None:

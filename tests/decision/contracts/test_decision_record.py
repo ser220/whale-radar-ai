@@ -94,3 +94,40 @@ def test_policy_validation():
     )
 
     assert validated is record
+
+
+@pytest.mark.parametrize(
+    "field_name",
+    (
+        "decision_id",
+        "candidate_reference",
+        "intelligence_reference",
+    ),
+)
+def test_whitespace_only_references_are_rejected(field_name):
+    with pytest.raises(ValueError):
+        build_record(**{field_name: "   "})
+
+
+def test_boolean_confidence_is_rejected():
+    with pytest.raises(
+        TypeError,
+        match="confidence must be numeric",
+    ):
+        build_record(confidence=True)
+
+
+@pytest.mark.parametrize(
+    "invalid_value",
+    (
+        None,
+        "2026-07-20T12:00:00Z",
+        123,
+    ),
+)
+def test_invalid_created_at_type_is_rejected(invalid_value):
+    with pytest.raises(
+        TypeError,
+        match="created_at must be datetime",
+    ):
+        build_record(created_at=invalid_value)
