@@ -10,6 +10,9 @@ from app.decision.contracts import (
     DecisionType,
 )
 from app.decision.identity import build_decision_id
+from app.intelligence.candidate_decision_input.enums import (
+    CandidateDecisionInputStatus,
+)
 from app.intelligence.candidate_decision_input.models import (
     CandidateDecisionInputProjection,
 )
@@ -52,6 +55,14 @@ class DecisionBuilder:
             raise TypeError(
                 "projection must be "
                 "CandidateDecisionInputProjection"
+            )
+
+        if (
+            projection.status
+            is not CandidateDecisionInputStatus.AVAILABLE
+        ):
+            raise ValueError(
+                "projection must be available"
             )
 
         if not isinstance(

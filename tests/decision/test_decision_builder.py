@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 
+import pytest
+
 from app.decision.builder import DecisionBuilder
 from app.decision.contracts import (
     DecisionState,
@@ -59,3 +61,23 @@ def test_builder_is_deterministic() -> None:
     )
 
     assert first.decision_id == second.decision_id
+
+
+def test_builder_rejects_unavailable_projection() -> None:
+    projection = CandidateDecisionInputProjection(
+        candidate_reference="candidate-1",
+        intelligence_reference="intel-1",
+        status=CandidateDecisionInputStatus.UNAVAILABLE,
+        version=CandidateDecisionInputVersion.V1,
+        created_at=datetime.now(timezone.utc),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="projection must be available",
+    ):
+        DecisionBuilder().build(
+            projection=projection,
+            decision_type=DecisionType.LONG,
+            confidence=0.80,
+        )
