@@ -84,9 +84,6 @@ from app.services.unified_funding_hub import (
 )
 
 
-from app.services.analyze_service import (
-    AnalyzeService,
-)
 from app.telegram.analyze_formatter import (
     format_analyze_result,
     is_shadow_preview_enabled,
@@ -955,6 +952,10 @@ async def analyze(update, context):
     )
 
     try:
+        from app.services.analyze_service import (
+            AnalyzeService,
+        )
+
         service = AnalyzeService(
             execution_exchange="okx",
             arkham_max_age_hours=48,
