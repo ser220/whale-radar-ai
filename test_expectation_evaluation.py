@@ -586,10 +586,24 @@ class BoundaryTests(unittest.TestCase):
                     ))
                 return values
 
+        class FakeFundingService:
+            def build(self, asset):
+                normalized = asset.upper().replace("USDT", "")
+                return {
+                    "status": "unavailable",
+                    "asset": normalized,
+                    "exchanges": {},
+                    "unavailable_exchanges": {},
+                    "captured_at": NOW.isoformat(),
+                }
+
         class FakeScanner:
             def __init__(self):
                 self.calls = 0
-                self.scanner = EarlyBirdScanner(candle_source=FakeSource())
+                self.scanner = EarlyBirdScanner(
+                    candle_source=FakeSource(),
+                    funding_service=FakeFundingService(),
+                )
 
             def scan(self, assets, timeframe="15m", limit=5):
                 timestamp = NOW + timedelta(minutes=15 * self.calls)
