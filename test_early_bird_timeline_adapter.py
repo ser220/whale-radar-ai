@@ -64,8 +64,23 @@ class FakeCandleSource:
         return candles(asset.upper().replace("USDT", ""))
 
 
+class FakeFundingService:
+    def build(self, asset):
+        normalized = asset.upper().replace("USDT", "")
+        return {
+            "status": "unavailable",
+            "asset": normalized,
+            "exchanges": {},
+            "unavailable_exchanges": {},
+            "captured_at": NOW.isoformat(),
+        }
+
+
 def scan(assets=("BTC", "ETH")):
-    return EarlyBirdScanner(candle_source=FakeCandleSource()).scan(
+    return EarlyBirdScanner(
+        candle_source=FakeCandleSource(),
+        funding_service=FakeFundingService(),
+    ).scan(
         assets,
         timeframe="15m",
         candle_count=100,
