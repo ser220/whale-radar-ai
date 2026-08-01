@@ -1,3 +1,5 @@
+from .feed import MarketFeed
+
 from .models import (
     HistoricalMarketPoint,
 )
@@ -19,6 +21,7 @@ from .simulation_feed import (
 )
 
 __all__ = [
+    "MarketFeed",
     "HistoricalMarketPoint",
     "MarketDataProvider",
     "HistoricalMarketSimulationAdapter",
