@@ -190,6 +190,7 @@ def test_public_exports_are_exact() -> None:
         "InstrumentType",
         "MarketIdentity",
         "MarketType",
+        "TradingInstrument",
     ]
 
 
