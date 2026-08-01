@@ -1,3 +1,4 @@
+from .builder import UniversalMarketFeedBuilder
 from .feed import MarketFeed
 
 from .models import (
@@ -21,6 +22,7 @@ from .simulation_feed import (
 )
 
 __all__ = [
+    "UniversalMarketFeedBuilder",
     "MarketFeed",
     "HistoricalMarketPoint",
     "MarketDataProvider",
