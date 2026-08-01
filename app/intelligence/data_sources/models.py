@@ -188,6 +188,110 @@ class DerivativesSnapshot:
 
 
 @dataclass(frozen=True)
+class OpenInterestSnapshot:
+    """Normalized multi-exchange open-interest state."""
+
+    source_category: DataSourceCategory
+    source: DataSourceType
+    asset: str
+    total_open_interest_usd: float
+    execution_open_interest_usd: float
+    exchange_count: int
+    largest_market: str
+    captured_at: datetime
+
+    def __post_init__(self) -> None:
+        category, source = _source_identity(
+            self.source_category,
+            self.source,
+            DataSourceCategory.DERIVATIVES,
+        )
+        object.__setattr__(self, "source_category", category)
+        object.__setattr__(self, "source", source)
+        object.__setattr__(
+            self,
+            "asset",
+            required_text(self.asset, "asset", uppercase=True),
+        )
+        object.__setattr__(
+            self,
+            "total_open_interest_usd",
+            non_negative_number(
+                self.total_open_interest_usd,
+                "total_open_interest_usd",
+            ),
+        )
+        object.__setattr__(
+            self,
+            "execution_open_interest_usd",
+            non_negative_number(
+                self.execution_open_interest_usd,
+                "execution_open_interest_usd",
+            ),
+        )
+
+        if (
+            self.execution_open_interest_usd
+            > self.total_open_interest_usd
+        ):
+            raise ValueError(
+                "execution_open_interest_usd cannot exceed "
+                "total_open_interest_usd"
+            )
+
+        if (
+            isinstance(self.exchange_count, bool)
+            or not isinstance(self.exchange_count, int)
+        ):
+            raise TypeError(
+                "exchange_count must be a positive integer"
+            )
+
+        if self.exchange_count <= 0:
+            raise ValueError(
+                "exchange_count must be a positive integer"
+            )
+
+        object.__setattr__(
+            self,
+            "largest_market",
+            required_text(
+                self.largest_market,
+                "largest_market",
+            ),
+        )
+        object.__setattr__(
+            self,
+            "captured_at",
+            utc_datetime(self.captured_at),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "source_category": self.source_category.value,
+            "source": self.source.value,
+            "asset": self.asset,
+            "total_open_interest_usd": self.total_open_interest_usd,
+            "execution_open_interest_usd": (
+                self.execution_open_interest_usd
+            ),
+            "exchange_count": self.exchange_count,
+            "largest_market": self.largest_market,
+            "captured_at": self.captured_at.isoformat(),
+        }
+
+    def canonical_json(self) -> str:
+        return canonical_json(self.to_dict())
+
+    @classmethod
+    def from_dict(
+        cls,
+        value: Mapping[str, Any],
+    ) -> "OpenInterestSnapshot":
+        return cls(**_snapshot_payload(cls, value))
+
+
+@dataclass(frozen=True)
 class WhaleActivitySnapshot:
     """Normalized on-chain whale observation without wallet resolution."""
 
@@ -437,6 +541,7 @@ class TechnicalSignalSnapshot:
 __all__ = [
     "DerivativesSnapshot",
     "MarketSnapshot",
+    "OpenInterestSnapshot",
     "NewsEventSnapshot",
     "SmartMoneySnapshot",
     "TechnicalSignalSnapshot",

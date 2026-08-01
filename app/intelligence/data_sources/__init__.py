@@ -4,6 +4,7 @@ from .enums import DataSourceCategory, DataSourceType
 from .models import (
     DerivativesSnapshot,
     MarketSnapshot,
+    OpenInterestSnapshot,
     NewsEventSnapshot,
     SmartMoneySnapshot,
     TechnicalSignalSnapshot,
@@ -16,6 +17,7 @@ __all__ = [
     "DataSourceType",
     "DerivativesSnapshot",
     "MarketSnapshot",
+    "OpenInterestSnapshot",
     "NewsEventSnapshot",
     "SmartMoneySnapshot",
     "TechnicalSignalSnapshot",

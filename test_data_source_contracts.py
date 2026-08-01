@@ -13,6 +13,7 @@ from app.intelligence.data_sources import (
     DataSourceType,
     DerivativesSnapshot,
     MarketSnapshot,
+    OpenInterestSnapshot,
     NewsEventSnapshot,
     SmartMoneySnapshot,
     TechnicalSignalSnapshot,
@@ -551,3 +552,132 @@ class ArchitectureBoundaryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def open_interest_snapshot(**overrides):
+    values = {
+        "source_category": DataSourceCategory.DERIVATIVES,
+        "source": DataSourceType.COINGLASS,
+        "asset": "btc",
+        "total_open_interest_usd": 16577342768.52,
+        "execution_open_interest_usd": 12871103626.94,
+        "exchange_count": 4,
+        "largest_market": "Binance",
+        "captured_at": UTC_TIME,
+    }
+    values.update(overrides)
+    return OpenInterestSnapshot(**values)
+
+
+class OpenInterestSnapshotTests(unittest.TestCase):
+    def test_fields_are_exact(self):
+        self.assertEqual(
+            tuple(item.name for item in fields(OpenInterestSnapshot)),
+            (
+                "source_category",
+                "source",
+                "asset",
+                "total_open_interest_usd",
+                "execution_open_interest_usd",
+                "exchange_count",
+                "largest_market",
+                "captured_at",
+            ),
+        )
+
+    def test_values_are_normalized(self):
+        snapshot = open_interest_snapshot(
+            asset="btc",
+            largest_market="Binance",
+        )
+
+        self.assertEqual("BTC", snapshot.asset)
+        self.assertEqual("Binance", snapshot.largest_market)
+        self.assertIsInstance(snapshot.total_open_interest_usd, float)
+        self.assertIsInstance(snapshot.execution_open_interest_usd, float)
+        self.assertEqual(4, snapshot.exchange_count)
+
+    def test_requires_derivatives_source_category(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            "source_category must be DERIVATIVES",
+        ):
+            open_interest_snapshot(
+                source_category=DataSourceCategory.EXCHANGE,
+            )
+
+    def test_total_open_interest_must_not_be_negative(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            "total_open_interest_usd must be greater than or equal to 0",
+        ):
+            open_interest_snapshot(
+                total_open_interest_usd=-1,
+            )
+
+    def test_execution_open_interest_must_not_be_negative(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            "execution_open_interest_usd must be greater than or equal to 0",
+        ):
+            open_interest_snapshot(
+                execution_open_interest_usd=-1,
+            )
+
+    def test_execution_open_interest_cannot_exceed_total(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            "execution_open_interest_usd cannot exceed total_open_interest_usd",
+        ):
+            open_interest_snapshot(
+                total_open_interest_usd=100,
+                execution_open_interest_usd=101,
+            )
+
+    @unittest.skipUnless(True, "contract check")
+    def test_exchange_count_requires_positive_integer(self):
+        for value in (True, False, 0, -1, 1.5):
+            with self.subTest(value=value):
+                with self.assertRaises(
+                    (TypeError, ValueError),
+                ):
+                    open_interest_snapshot(
+                        exchange_count=value,
+                    )
+
+    def test_contract_is_frozen_and_hashable(self):
+        first = open_interest_snapshot()
+        second = open_interest_snapshot()
+
+        self.assertEqual(first, second)
+        self.assertEqual(hash(first), hash(second))
+
+        with self.assertRaises(FrozenInstanceError):
+            first.asset = "ETH"
+
+    def test_to_dict_is_exact(self):
+        snapshot = open_interest_snapshot()
+
+        self.assertEqual(
+            {
+                "source_category": "DERIVATIVES",
+                "source": "COINGLASS",
+                "asset": "BTC",
+                "total_open_interest_usd": 16577342768.52,
+                "execution_open_interest_usd": 12871103626.94,
+                "exchange_count": 4,
+                "largest_market": "Binance",
+                "captured_at": UTC_TIME.isoformat(),
+            },
+            snapshot.to_dict(),
+        )
+
+    def test_from_dict_round_trip(self):
+        snapshot = open_interest_snapshot()
+
+        self.assertEqual(
+            snapshot,
+            OpenInterestSnapshot.from_dict(
+                snapshot.to_dict()
+            ),
+        )

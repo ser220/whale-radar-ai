@@ -16,6 +16,7 @@ from app.intelligence.data_sources import (
     DataSourceType,
     DerivativesSnapshot,
     MarketSnapshot,
+    OpenInterestSnapshot,
 )
 
 
@@ -87,6 +88,19 @@ def build_market_snapshot() -> MarketSnapshot:
     )
 
 
+def build_open_interest_snapshot() -> OpenInterestSnapshot:
+    return OpenInterestSnapshot(
+        source_category=DataSourceCategory.DERIVATIVES,
+        source=DataSourceType.COINGLASS,
+        asset="BTC",
+        total_open_interest_usd=16577342768.52,
+        execution_open_interest_usd=12871103626.94,
+        exchange_count=4,
+        largest_market="Binance",
+        captured_at=CAPTURED_AT,
+    )
+
+
 def build_derivatives_snapshot() -> DerivativesSnapshot:
     return DerivativesSnapshot(
         source_category=DataSourceCategory.DERIVATIVES,
@@ -106,6 +120,7 @@ def build_feed(**overrides) -> MarketFeed:
         "candles": build_candles(),
         "market_snapshot": build_market_snapshot(),
         "derivatives_snapshot": build_derivatives_snapshot(),
+        "open_interest_snapshot": build_open_interest_snapshot(),
         "captured_at": CAPTURED_AT,
     }
     values.update(overrides)
@@ -118,6 +133,7 @@ def test_fields_are_exact() -> None:
         "candles",
         "market_snapshot",
         "derivatives_snapshot",
+        "open_interest_snapshot",
         "captured_at",
     ]
 
@@ -129,7 +145,17 @@ def test_feed_preserves_normalized_market_data() -> None:
     assert len(feed.candles) == 2
     assert feed.market_snapshot.price == 62900.0
     assert feed.derivatives_snapshot.open_interest == 1000000.0
+    assert (
+        feed.open_interest_snapshot.total_open_interest_usd
+        == 16577342768.52
+    )
     assert feed.captured_at == CAPTURED_AT
+
+
+def test_open_interest_snapshot_may_be_none() -> None:
+    feed = build_feed(open_interest_snapshot=None)
+
+    assert feed.open_interest_snapshot is None
 
 
 def test_derivatives_snapshot_may_be_none() -> None:
@@ -185,6 +211,17 @@ def test_market_snapshot_requires_market_snapshot() -> None:
         match="market_snapshot must be a MarketSnapshot",
     ):
         build_feed(market_snapshot={})
+
+
+def test_open_interest_snapshot_requires_correct_type() -> None:
+    with pytest.raises(
+        TypeError,
+        match=(
+            "open_interest_snapshot must be an "
+            "OpenInterestSnapshot or None"
+        ),
+    ):
+        build_feed(open_interest_snapshot={})
 
 
 def test_derivatives_snapshot_requires_correct_type() -> None:
@@ -264,6 +301,9 @@ def test_to_dict_is_exact() -> None:
         "derivatives_snapshot": (
             feed.derivatives_snapshot.to_dict()
         ),
+        "open_interest_snapshot": (
+            feed.open_interest_snapshot.to_dict()
+        ),
         "captured_at": CAPTURED_AT.isoformat(),
     }
 
@@ -310,6 +350,7 @@ def test_public_type_hints_are_python_39_compatible() -> None:
         "candles": Tuple[Candle, ...],
         "market_snapshot": MarketSnapshot,
         "derivatives_snapshot": Optional[DerivativesSnapshot],
+        "open_interest_snapshot": Optional[OpenInterestSnapshot],
         "captured_at": datetime,
     }
 

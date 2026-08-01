@@ -2,6 +2,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from app.domain.market import TradingInstrument
+from app.intelligence.data_sources import (
+    DataSourceCategory,
+    DataSourceType,
+    OpenInterestSnapshot,
+)
 
 from .feed import MarketFeed
 
@@ -51,6 +56,7 @@ class UniversalMarketFeedBuilder:
         *,
         candle_source: Any,
         market_collector: Any,
+        open_interest_service: Any = None,
     ) -> None:
         if not (
             callable(
@@ -84,8 +90,23 @@ class UniversalMarketFeedBuilder:
                 "market_collector must provide collect"
             )
 
+        if (
+            open_interest_service is not None
+            and not callable(
+                getattr(
+                    open_interest_service,
+                    "build",
+                    None,
+                )
+            )
+        ):
+            raise TypeError(
+                "open_interest_service must provide build or be None"
+            )
+
         self._candle_source = candle_source
         self._market_collector = market_collector
+        self._open_interest_service = open_interest_service
 
     @property
     def candle_source(self) -> Any:
@@ -94,6 +115,10 @@ class UniversalMarketFeedBuilder:
     @property
     def market_collector(self) -> Any:
         return self._market_collector
+
+    @property
+    def open_interest_service(self) -> Any:
+        return self._open_interest_service
 
     def build(
         self,
@@ -196,10 +221,55 @@ class UniversalMarketFeedBuilder:
             instrument.identity.symbol
         )
 
+        open_interest_snapshot = None
+
+        if self.open_interest_service is not None:
+            raw_open_interest = (
+                self.open_interest_service.build(
+                    instrument.base_symbol
+                )
+            )
+
+            analytics = raw_open_interest["analytics"]
+            largest_market = analytics["largest_market"]
+
+            open_interest_snapshot = OpenInterestSnapshot(
+                source_category=DataSourceCategory.DERIVATIVES,
+                source=DataSourceType.COINGLASS,
+                asset=raw_open_interest["asset"],
+                total_open_interest_usd=(
+                    analytics["total_open_interest_usd"]
+                ),
+                execution_open_interest_usd=(
+                    analytics["execution_open_interest_usd"]
+                ),
+                exchange_count=raw_open_interest["exchange_count"],
+                largest_market=largest_market["exchange"],
+                captured_at=datetime.fromisoformat(
+                    raw_open_interest["captured_at"].replace(
+                        "Z",
+                        "+00:00",
+                    )
+                ),
+            )
+
+        component_timestamps = [
+            normalized_captured_at,
+            market_snapshot.captured_at,
+        ]
+
+        if open_interest_snapshot is not None:
+            component_timestamps.append(
+                open_interest_snapshot.captured_at
+            )
+
+        feed_captured_at = max(component_timestamps)
+
         return MarketFeed(
             instrument=instrument,
             candles=completed_candles,
             market_snapshot=market_snapshot,
             derivatives_snapshot=None,
-            captured_at=normalized_captured_at,
+            open_interest_snapshot=open_interest_snapshot,
+            captured_at=feed_captured_at,
         )

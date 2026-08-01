@@ -6,6 +6,7 @@ from app.domain.candle import Candle
 from app.intelligence.data_sources import (
     DerivativesSnapshot,
     MarketSnapshot,
+    OpenInterestSnapshot,
 )
 
 from app.domain.market import TradingInstrument
@@ -17,6 +18,7 @@ class MarketFeed:
     candles: Tuple[Candle, ...]
     market_snapshot: MarketSnapshot
     derivatives_snapshot: Optional[DerivativesSnapshot]
+    open_interest_snapshot: Optional[OpenInterestSnapshot]
     captured_at: datetime
 
     def __post_init__(self) -> None:
@@ -79,6 +81,18 @@ class MarketFeed:
                 "DerivativesSnapshot or None"
             )
 
+        if (
+            self.open_interest_snapshot is not None
+            and not isinstance(
+                self.open_interest_snapshot,
+                OpenInterestSnapshot,
+            )
+        ):
+            raise TypeError(
+                "open_interest_snapshot must be an "
+                "OpenInterestSnapshot or None"
+            )
+
         instrument_symbol = (
             self.instrument.identity.symbol
         )
@@ -131,6 +145,12 @@ class MarketFeed:
                 is not None
                 else None
             ),
+            "open_interest_snapshot": (
+                self.open_interest_snapshot.to_dict()
+                if self.open_interest_snapshot
+                is not None
+                else None
+            ),
             "captured_at": (
                 self.captured_at.isoformat()
             ),
@@ -151,6 +171,7 @@ class MarketFeed:
             "candles",
             "market_snapshot",
             "derivatives_snapshot",
+            "open_interest_snapshot",
             "captured_at",
         }
         supplied_fields = set(data)
@@ -206,6 +227,17 @@ class MarketFeed:
                 derivatives
             )
             if derivatives is not None
+            else None
+        )
+
+        open_interest = payload[
+            "open_interest_snapshot"
+        ]
+        payload["open_interest_snapshot"] = (
+            OpenInterestSnapshot.from_dict(
+                open_interest
+            )
+            if open_interest is not None
             else None
         )
 

@@ -326,3 +326,101 @@ def test_build_excludes_incomplete_current_candle() -> None:
         NOW - timedelta(minutes=30),
         NOW - timedelta(minutes=15),
     )
+
+
+def test_build_includes_open_interest_snapshot_when_service_is_supplied() -> None:
+    from datetime import timedelta
+
+    from app.domain.candle import Candle
+    from app.intelligence.data_sources import (
+        DataSourceCategory,
+        DataSourceType,
+        MarketSnapshot,
+    )
+
+    class WorkingCandleSource:
+        def source_name(self):
+            return "fake-candles"
+
+        def get_candles(
+            self,
+            asset,
+            interval,
+            start_time,
+            end_time=None,
+            limit=1000,
+        ):
+            return [
+                Candle(
+                    timestamp=NOW - timedelta(minutes=30),
+                    open=100,
+                    high=105,
+                    low=95,
+                    close=102,
+                    volume=10,
+                ),
+                Candle(
+                    timestamp=NOW - timedelta(minutes=15),
+                    open=102,
+                    high=106,
+                    low=101,
+                    close=104,
+                    volume=12,
+                ),
+            ]
+
+    class WorkingMarketCollector:
+        def collect(self, symbol):
+            return MarketSnapshot(
+                source_category=DataSourceCategory.EXCHANGE,
+                source=DataSourceType.BINANCE,
+                symbol=symbol,
+                price=104,
+                volume_24h=1000,
+                change_24h=2.5,
+                captured_at=NOW,
+            )
+
+    class WorkingOpenInterestService:
+        def build(self, asset):
+            assert asset == "BTC"
+
+            return {
+                "status": "completed",
+                "asset": "BTC",
+                "exchange_count": 4,
+                "analytics": {
+                    "total_open_interest_usd": 16577342768.52,
+                    "execution_open_interest_usd": 12871103626.94,
+                    "largest_market": {
+                        "exchange": "Binance",
+                    },
+                },
+                "captured_at": NOW.isoformat(),
+            }
+
+    builder = UniversalMarketFeedBuilder(
+        candle_source=WorkingCandleSource(),
+        market_collector=WorkingMarketCollector(),
+        open_interest_service=WorkingOpenInterestService(),
+    )
+
+    feed = builder.build(
+        instrument=build_instrument(),
+        timeframe="15m",
+        candle_count=2,
+        captured_at=NOW,
+    )
+
+    assert feed.open_interest_snapshot is not None
+    assert feed.open_interest_snapshot.asset == "BTC"
+    assert (
+        feed.open_interest_snapshot.total_open_interest_usd
+        == 16577342768.52
+    )
+    assert (
+        feed.open_interest_snapshot.execution_open_interest_usd
+        == 12871103626.94
+    )
+    assert feed.open_interest_snapshot.exchange_count == 4
+    assert feed.open_interest_snapshot.largest_market == "Binance"
