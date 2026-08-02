@@ -14,6 +14,18 @@ from app.intelligence.early_bird.scanner import (
 from app.services.unified_open_interest_hub import (
     UnifiedOpenInterestHubService,
 )
+from app.telegram.early_bird_flag import (
+    early_bird_telegram_enabled,
+)
+from app.telegram.early_bird_sender import (
+    send_early_bird_telegram,
+)
+from app.telegram.early_bird_flag import (
+    early_bird_telegram_enabled,
+)
+from app.telegram.early_bird_sender import (
+    send_early_bird_telegram,
+)
 
 
 def _asset_argument(value: str) -> Tuple[str, ...]:
