@@ -2,10 +2,6 @@
 
 from typing import Any
 
-from app.data.market.market_universe import (
-    MarketUniverse,
-)
-
 
 class EarlyBirdMarketSweep:
     """Run Early Bird scanning across a market universe."""
@@ -25,17 +21,17 @@ class EarlyBirdMarketSweep:
 
     def universe(
         self,
-        universe: MarketUniverse,
+        universe: Any,
         *,
         timeframe: str = "15m",
         limit: int = 5,
     ):
-        if not isinstance(
+        if not hasattr(
             universe,
-            MarketUniverse,
+            "assets",
         ):
             raise TypeError(
-                "universe must be a MarketUniverse"
+                "universe must provide assets"
             )
 
         return self._scanner.scan(

@@ -9,9 +9,6 @@ from app.intelligence.early_bird.shadow_message import (
 from app.intelligence.early_bird.shadow_watcher import (
     EarlyBirdShadowWatcher,
 )
-from app.telegram.early_bird_sender import (
-    send_early_bird_shadow,
-)
 
 
 @dataclass(frozen=True)
@@ -29,10 +26,10 @@ class EarlyBirdShadowPipeline:
     def __init__(
         self,
         *,
-        send_fn: Callable[[str], bool] = send_early_bird_shadow,
+        send_fn: Callable[[str], bool] | None = None,
         watcher: EarlyBirdShadowWatcher | None = None,
     ) -> None:
-        self.send_fn = send_fn
+        self.send_fn = send_fn or (lambda _: False)
         self.watcher = (
             watcher
             or EarlyBirdShadowWatcher()
