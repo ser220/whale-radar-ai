@@ -673,9 +673,23 @@ class FormatterDemoAndBoundaryTests(unittest.TestCase):
                     ))
                 return values
 
+        class FakeFundingService:
+            def build(self, asset):
+                normalized = asset.upper().replace("USDT", "")
+                return {
+                    "status": "unavailable",
+                    "asset": normalized,
+                    "exchanges": {},
+                    "unavailable_exchanges": {},
+                    "captured_at": NOW.isoformat(),
+                }
+
         class FakeScanner:
             def scan(self, assets, timeframe="15m", limit=5):
-                return EarlyBirdScanner(candle_source=FakeSource()).scan(
+                return EarlyBirdScanner(
+                    candle_source=FakeSource(),
+                    funding_service=FakeFundingService(),
+                ).scan(
                     assets,
                     timeframe=timeframe,
                     limit=limit,

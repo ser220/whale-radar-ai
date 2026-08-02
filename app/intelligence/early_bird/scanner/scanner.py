@@ -6,6 +6,12 @@ from datetime import datetime, timedelta, timezone
 from types import MappingProxyType
 from typing import Any, Dict, Iterable, Mapping as TypingMapping, Optional, Tuple
 
+from app.data.market import OpenInterestHistory
+from app.intelligence.data_sources import (
+    DataSourceCategory,
+    DataSourceType,
+    OpenInterestSnapshot,
+)
 from app.intelligence.early_bird.availability import (
     EarlyBirdFactorValue,
     FactorAvailability,
@@ -30,6 +36,9 @@ from app.intelligence.early_bird.scanner.candle_factors import (
 from app.intelligence.early_bird.scanner.funding_factor import (
     FRESHNESS_WINDOW as FUNDING_FRESHNESS_WINDOW,
     FundingDivergenceFactor,
+)
+from app.intelligence.early_bird.scanner.open_interest_factor import (
+    OpenInterestChangeFactor,
 )
 from app.services.unified_funding_hub import UnifiedFundingHubService
 from app.sources.binance_candle_source import BinanceCandleSource
@@ -226,6 +235,9 @@ class EarlyBirdScanner:
         factor_calculator: Any = None,
         funding_service: Any = None,
         funding_calculator: Any = None,
+        open_interest_service: Any = None,
+        open_interest_history: Any = None,
+        open_interest_calculator: Any = None,
         candidate_builder: Any = None,
         engine: Any = None,
     ) -> None:
@@ -246,6 +258,17 @@ class EarlyBirdScanner:
             FundingDivergenceFactor()
             if funding_calculator is None
             else funding_calculator
+        )
+        self._open_interest_service = open_interest_service
+        self._open_interest_history = (
+            OpenInterestHistory()
+            if open_interest_history is None
+            else open_interest_history
+        )
+        self._open_interest_calculator = (
+            OpenInterestChangeFactor()
+            if open_interest_calculator is None
+            else open_interest_calculator
         )
         self._candidate_builder = (
             EarlyBirdCandidateBuilder()
@@ -322,6 +345,91 @@ class EarlyBirdScanner:
                     evaluated_at=evaluated_at,
                 )
 
+            open_interest_factor = EarlyBirdFactorValue(
+                "open_interest_change",
+                FactorAvailability.MISSING,
+                reason=(
+                    "No Open Interest service is configured "
+                    "for this scanner."
+                ),
+                metadata={"asset": asset},
+            )
+
+            if self._open_interest_service is not None:
+                try:
+                    raw_open_interest = (
+                        self._open_interest_service.build(asset)
+                    )
+
+                    analytics = raw_open_interest["analytics"]
+                    largest_market = analytics["largest_market"]
+
+                    current_open_interest = OpenInterestSnapshot(
+                        source_category=(
+                            DataSourceCategory.DERIVATIVES
+                        ),
+                        source=DataSourceType.COINGLASS,
+                        asset=raw_open_interest["asset"],
+                        total_open_interest_usd=(
+                            analytics[
+                                "total_open_interest_usd"
+                            ]
+                        ),
+                        execution_open_interest_usd=(
+                            analytics[
+                                "execution_open_interest_usd"
+                            ]
+                        ),
+                        exchange_count=raw_open_interest[
+                            "exchange_count"
+                        ],
+                        largest_market=largest_market[
+                            "exchange"
+                        ],
+                        captured_at=datetime.fromisoformat(
+                            raw_open_interest[
+                                "captured_at"
+                            ].replace(
+                                "Z",
+                                "+00:00",
+                            )
+                        ),
+                    )
+
+                    previous_open_interest = (
+                        self._open_interest_history.previous(
+                            asset,
+                            before=current_open_interest.captured_at,
+                        )
+                    )
+
+                    self._open_interest_history.append(
+                        current_open_interest
+                    )
+
+                    open_interest_factor = (
+                        self._open_interest_calculator.build(
+                            asset=asset,
+                            previous=previous_open_interest,
+                            current=current_open_interest,
+                            evaluated_at=evaluated_at,
+                        )
+                    )
+
+                except Exception as exc:
+                    open_interest_factor = EarlyBirdFactorValue(
+                        "open_interest_change",
+                        FactorAvailability.MISSING,
+                        reason=(
+                            "Open Interest data could not be "
+                            "loaded or normalized."
+                        ),
+                        metadata={
+                            "asset": asset,
+                            "error_type": type(exc).__name__,
+                        },
+                    )
+
             if asset == "BTC":
                 candles = cache["BTC"]
                 if benchmark_error is not None:
@@ -359,13 +467,7 @@ class EarlyBirdScanner:
                             "No Arkham webhook input is part of this candle scan."
                         ),
                     ),
-                    EarlyBirdFactorValue(
-                        "open_interest_change",
-                        FactorAvailability.UNSUPPORTED,
-                        reason=(
-                            "OI change is not implemented from candle data."
-                        ),
-                    ),
+                    open_interest_factor,
                     funding_factor,
                     EarlyBirdFactorValue(
                         "liquidity_event",

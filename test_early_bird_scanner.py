@@ -204,10 +204,10 @@ class ScannerTests(unittest.TestCase):
             values["funding_divergence"].availability,
         )
 
-    def test_unsupported_oi_and_liquidity_are_explicit(self):
+    def test_missing_oi_and_unsupported_liquidity_are_explicit(self):
         values = scan(("BTC",)).items[0].build_result.factor_values
         self.assertIs(
-            FactorAvailability.UNSUPPORTED,
+            FactorAvailability.MISSING,
             values["open_interest_change"].availability,
         )
         self.assertIs(
@@ -215,9 +215,9 @@ class ScannerTests(unittest.TestCase):
             values["liquidity_event"].availability,
         )
 
-    def test_completeness_is_four_of_six_supported_factors(self):
+    def test_completeness_is_four_of_seven_supported_factors(self):
         candidate = scan(("BTC",)).items[0].build_result.candidate
-        self.assertEqual(66.666667, candidate.data_completeness_score)
+        self.assertEqual(57.142857, candidate.data_completeness_score)
 
     def test_early_bird_engine_ranking_is_used(self):
         engine = TrackingEngine()
@@ -361,3 +361,179 @@ class DependencyBoundaryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FakeOpenInterestService:
+    def __init__(self):
+        self.calls = []
+        self.values = {
+            "BTC": (
+                16_000_000_000,
+                16_800_000_000,
+            ),
+        }
+        self.call_counts = {}
+
+    def build(self, asset):
+        normalized = asset.upper().replace("USDT", "")
+        self.calls.append(normalized)
+
+        call_index = self.call_counts.get(normalized, 0)
+        self.call_counts[normalized] = call_index + 1
+
+        values = self.values.get(
+            normalized,
+            (
+                10_000_000_000,
+                10_100_000_000,
+            ),
+        )
+        total = values[min(call_index, len(values) - 1)]
+        captured_at = NOW + INTERVAL * call_index
+
+        return {
+            "status": "completed",
+            "asset": normalized,
+            "exchange_count": 4,
+            "analytics": {
+                "total_open_interest_usd": total,
+                "execution_open_interest_usd": total * 0.75,
+                "largest_market": {
+                    "exchange": "Binance",
+                },
+            },
+            "captured_at": captured_at.isoformat(),
+        }
+
+
+class OpenInterestScannerIntegrationTests(unittest.TestCase):
+    def build_scanner(self):
+        from app.data.market import OpenInterestHistory
+        from app.intelligence.early_bird.scanner import (
+            OpenInterestChangeFactor,
+        )
+
+        service = FakeOpenInterestService()
+        history = OpenInterestHistory()
+
+        scanner = EarlyBirdScanner(
+            candle_source=FakeCandleSource(),
+            funding_service=FakeFundingService(),
+            open_interest_service=service,
+            open_interest_history=history,
+            open_interest_calculator=OpenInterestChangeFactor(),
+        )
+
+        return scanner, service, history
+
+    def test_first_scan_marks_open_interest_change_missing(self):
+        scanner, service, history = self.build_scanner()
+
+        result = scanner.scan(
+            ("BTC",),
+            timeframe="15m",
+            candle_count=100,
+            limit=10,
+            timestamp=NOW,
+        )
+
+        factor = (
+            result.items[0]
+            .build_result
+            .factor_values["open_interest_change"]
+        )
+
+        self.assertIs(
+            FactorAvailability.MISSING,
+            factor.availability,
+        )
+        self.assertEqual(["BTC"], service.calls)
+        self.assertIsNotNone(history.latest("BTC"))
+
+    def test_second_scan_makes_open_interest_change_available(self):
+        scanner, service, history = self.build_scanner()
+
+        first = scanner.scan(
+            ("BTC",),
+            timeframe="15m",
+            candle_count=100,
+            limit=10,
+            timestamp=NOW,
+        )
+        second = scanner.scan(
+            ("BTC",),
+            timeframe="15m",
+            candle_count=100,
+            limit=10,
+            timestamp=NOW + INTERVAL,
+        )
+
+        first_factor = (
+            first.items[0]
+            .build_result
+            .factor_values["open_interest_change"]
+        )
+        second_factor = (
+            second.items[0]
+            .build_result
+            .factor_values["open_interest_change"]
+        )
+
+        self.assertIs(
+            FactorAvailability.MISSING,
+            first_factor.availability,
+        )
+        self.assertIs(
+            FactorAvailability.AVAILABLE,
+            second_factor.availability,
+        )
+        self.assertEqual(50.0, second_factor.score)
+        self.assertEqual(
+            5.0,
+            second_factor.metadata["change_percent"],
+        )
+        self.assertEqual(["BTC", "BTC"], service.calls)
+        self.assertEqual(
+            2,
+            len(history.snapshots("BTC")),
+        )
+
+    def test_open_interest_failure_does_not_abort_scan(self):
+        class FailingOpenInterestService:
+            def build(self, asset):
+                raise RuntimeError(
+                    "offline open interest failure"
+                )
+
+        from app.data.market import OpenInterestHistory
+        from app.intelligence.early_bird.scanner import (
+            OpenInterestChangeFactor,
+        )
+
+        scanner = EarlyBirdScanner(
+            candle_source=FakeCandleSource(),
+            funding_service=FakeFundingService(),
+            open_interest_service=FailingOpenInterestService(),
+            open_interest_history=OpenInterestHistory(),
+            open_interest_calculator=OpenInterestChangeFactor(),
+        )
+
+        result = scanner.scan(
+            ("BTC",),
+            timeframe="15m",
+            candle_count=100,
+            limit=10,
+            timestamp=NOW,
+        )
+
+        factor = (
+            result.items[0]
+            .build_result
+            .factor_values["open_interest_change"]
+        )
+
+        self.assertIs(
+            FactorAvailability.MISSING,
+            factor.availability,
+        )
+        self.assertEqual((), result.failed_assets)

@@ -323,7 +323,7 @@ class FundingScannerIntegrationTests(unittest.TestCase):
             funding.score,
             item.build_result.candidate.funding_divergence_score,
         )
-        self.assertEqual(83.333333, item.build_result.candidate.data_completeness_score)
+        self.assertEqual(71.428571, item.build_result.candidate.data_completeness_score)
 
     def test_non_available_funding_state_is_preserved(self):
         service = FakeFundingService(
@@ -333,14 +333,14 @@ class FundingScannerIntegrationTests(unittest.TestCase):
         funding = item.build_result.factor_values["funding_divergence"]
         self.assertIs(FactorAvailability.MISSING, funding.availability)
         self.assertEqual(0.0, item.build_result.candidate.funding_divergence_score)
-        self.assertEqual(66.666667, item.build_result.candidate.data_completeness_score)
+        self.assertEqual(57.142857, item.build_result.candidate.data_completeness_score)
 
     def test_unsupported_funding_is_excluded_from_completeness(self):
         service = FakeFundingService(
             results={"BTC": funding_result(status="unsupported")}
         )
         item = scanner_result(("BTC",), service).items[0]
-        self.assertEqual(80.0, item.build_result.candidate.data_completeness_score)
+        self.assertEqual(66.666667, item.build_result.candidate.data_completeness_score)
 
     def test_ranking_with_funding_is_deterministic(self):
         service = FakeFundingService(
