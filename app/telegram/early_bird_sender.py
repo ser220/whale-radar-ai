@@ -30,6 +30,29 @@ def send_early_bird_telegram(
     return True if result is None else bool(result)
 
 
+def send_early_bird_shadow(
+    message: str,
+    *,
+    send_fn: Callable[[str], bool] = None,
+) -> bool:
+    """Send enabled Early Bird shadow message."""
+
+    if not isinstance(message, str) or not message.strip():
+        raise ValueError(
+            "message must not be empty"
+        )
+
+    if send_fn is None:
+        send_fn = send_telegram_message
+
+    return send_early_bird_telegram(
+        message,
+        enabled=True,
+        send_fn=send_fn,
+    )
+
+
 __all__ = [
     "send_early_bird_telegram",
+    "send_early_bird_shadow",
 ]
