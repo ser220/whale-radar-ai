@@ -24,7 +24,44 @@ class EarlyBirdRankTransitionPolicy:
         *,
         lifecycle,
         observation,
+        behavior_assessment=None,
     ) -> RankTransitionDecision:
+
+        if behavior_assessment is not None:
+
+            if (
+                behavior_assessment.action_hint
+                == "promote_ready"
+                and lifecycle.rank
+                == CandidateRank.DISCOVERY
+            ):
+                return RankTransitionDecision(
+                    asset=lifecycle.asset,
+                    previous_rank=lifecycle.rank,
+                    new_rank=CandidateRank.WATCHLIST,
+                    transition=RankTransition.PROMOTE,
+                    reason=(
+                        "accelerating behaviour detected"
+                    ),
+                    created_at=self._now(),
+                )
+
+            if (
+                behavior_assessment.action_hint
+                == "downgrade_check"
+                and lifecycle.rank
+                == CandidateRank.PRIME
+            ):
+                return RankTransitionDecision(
+                    asset=lifecycle.asset,
+                    previous_rank=lifecycle.rank,
+                    new_rank=CandidateRank.WATCHLIST,
+                    transition=RankTransition.DOWNGRADE,
+                    reason=(
+                        "critical behaviour decay detected"
+                    ),
+                    created_at=self._now(),
+                )
 
         negative_events = int(
             observation.get(
