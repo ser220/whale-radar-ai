@@ -83,6 +83,40 @@ class OpenInterestHistory:
 
         return values[-1]
 
+    def at_or_before(
+        self,
+        asset: str,
+        *,
+        at: datetime,
+    ) -> Optional[OpenInterestSnapshot]:
+        if not isinstance(at, datetime):
+            raise TypeError(
+                "at must be a datetime"
+            )
+
+        if (
+            at.tzinfo is None
+            or at.utcoffset() is None
+        ):
+            raise ValueError(
+                "at must be timezone aware"
+            )
+
+        at_utc = at.astimezone(
+            timezone.utc
+        )
+
+        eligible = tuple(
+            value
+            for value in self.snapshots(asset)
+            if value.captured_at <= at_utc
+        )
+
+        if not eligible:
+            return None
+
+        return eligible[-1]
+
     def previous(
         self,
         asset: str,

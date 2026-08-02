@@ -164,3 +164,55 @@ def test_previous_requires_timezone_aware_datetime() -> None:
             "BTC",
             before=datetime(2026, 8, 2, 0, 0),
         )
+
+
+def test_at_or_before_returns_latest_snapshot_not_after_boundary() -> None:
+    history = OpenInterestHistory()
+
+    first = snapshot(
+        total=16_400_000_000,
+        captured_at=NOW - timedelta(minutes=30),
+    )
+    second = snapshot(
+        total=16_500_000_000,
+        captured_at=NOW - timedelta(minutes=15),
+    )
+    third = snapshot(
+        total=16_600_000_000,
+        captured_at=NOW,
+    )
+
+    for value in (first, second, third):
+        history.append(value)
+
+    assert history.at_or_before(
+        "BTC",
+        at=NOW - timedelta(minutes=15),
+    ) == second
+
+
+def test_at_or_before_returns_none_without_old_enough_snapshot() -> None:
+    history = OpenInterestHistory()
+    history.append(
+        snapshot(
+            captured_at=NOW,
+        )
+    )
+
+    assert history.at_or_before(
+        "BTC",
+        at=NOW - timedelta(minutes=15),
+    ) is None
+
+
+def test_at_or_before_requires_timezone_aware_datetime() -> None:
+    history = OpenInterestHistory()
+
+    with pytest.raises(
+        ValueError,
+        match="at must be timezone aware",
+    ):
+        history.at_or_before(
+            "BTC",
+            at=datetime(2026, 8, 2, 0, 0),
+        )

@@ -396,10 +396,15 @@ class EarlyBirdScanner:
                         ),
                     )
 
+                    baseline_at = (
+                        current_open_interest.captured_at
+                        - timedelta(minutes=15)
+                    )
+
                     previous_open_interest = (
-                        self._open_interest_history.previous(
+                        self._open_interest_history.at_or_before(
                             asset,
-                            before=current_open_interest.captured_at,
+                            at=baseline_at,
                         )
                     )
 

@@ -537,3 +537,83 @@ class OpenInterestScannerIntegrationTests(unittest.TestCase):
             factor.availability,
         )
         self.assertEqual((), result.failed_assets)
+
+
+def test_open_interest_requires_full_15_minute_baseline() -> None:
+    from app.data.market import OpenInterestHistory
+    from app.intelligence.early_bird.scanner import (
+        OpenInterestChangeFactor,
+    )
+
+    class RapidOpenInterestService:
+        def __init__(self):
+            self.calls = 0
+
+        def build(self, asset):
+            captured_at = NOW + timedelta(
+                seconds=10 * self.calls
+            )
+            total = (
+                16_000_000_000
+                + 100_000_000 * self.calls
+            )
+            self.calls += 1
+
+            return {
+                "status": "completed",
+                "asset": asset,
+                "exchange_count": 4,
+                "analytics": {
+                    "total_open_interest_usd": total,
+                    "execution_open_interest_usd": (
+                        total * 0.75
+                    ),
+                    "largest_market": {
+                        "exchange": "Binance",
+                    },
+                },
+                "captured_at": captured_at.isoformat(),
+            }
+
+    scanner = EarlyBirdScanner(
+        candle_source=FakeCandleSource(),
+        funding_service=FakeFundingService(),
+        open_interest_service=RapidOpenInterestService(),
+        open_interest_history=OpenInterestHistory(),
+        open_interest_calculator=OpenInterestChangeFactor(),
+    )
+
+    first = scanner.scan(
+        ("BTC",),
+        timeframe="15m",
+        candle_count=100,
+        limit=1,
+        timestamp=NOW,
+    )
+    second = scanner.scan(
+        ("BTC",),
+        timeframe="15m",
+        candle_count=100,
+        limit=1,
+        timestamp=NOW + timedelta(seconds=10),
+    )
+
+    first_factor = (
+        first.items[0]
+        .build_result
+        .factor_values["open_interest_change"]
+    )
+    second_factor = (
+        second.items[0]
+        .build_result
+        .factor_values["open_interest_change"]
+    )
+
+    assert (
+        first_factor.availability
+        is FactorAvailability.MISSING
+    )
+    assert (
+        second_factor.availability
+        is FactorAvailability.MISSING
+    )
