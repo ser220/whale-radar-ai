@@ -7,6 +7,10 @@ from app.intelligence.early_bird.candidate_observation_history import (
     CandidateObservationHistory,
 )
 
+from app.intelligence.early_bird.candidate_behavior_score import (
+    CandidateBehaviorScore,
+)
+
 
 @dataclass(frozen=True)
 class CandidateHistoryAnalysis:
@@ -23,6 +27,7 @@ class CandidateHistoryAnalysis:
     positive_factor_count: int = 0
     negative_factor_count: int = 0
     behavior_direction: str = "insufficient"
+    behavior_score: CandidateBehaviorScore | None = None
 
 
 class CandidateHistoryAnalyzer:
@@ -109,6 +114,56 @@ class CandidateHistoryAnalyzer:
         else:
             behavior = "stable"
 
+        positive_values = [
+            value
+            for value in factor_changes
+            if value > 0
+        ]
+
+        negative_values = [
+            abs(value)
+            for value in factor_changes
+            if value < 0
+        ]
+
+        strength_score = (
+            min(
+                sum(positive_values) / len(positive_values),
+                100,
+            )
+            if positive_values
+            else 0.0
+        )
+
+        decay_score = (
+            min(
+                sum(negative_values) / len(negative_values),
+                100,
+            )
+            if negative_values
+            else 0.0
+        )
+
+        confidence = min(
+            (
+                max(
+                    positive_count,
+                    negative_count,
+                )
+                / len(factor_changes)
+            )
+            * 100,
+            100,
+        )
+
+        behavior_score = CandidateBehaviorScore(
+            asset=history.asset,
+            behavior_direction=behavior,
+            strength_score=strength_score,
+            decay_score=decay_score,
+            confidence=confidence,
+        )
+
         return CandidateHistoryAnalysis(
             asset=history.asset,
             quality_change=change,
@@ -121,6 +176,7 @@ class CandidateHistoryAnalyzer:
             positive_factor_count=positive_count,
             negative_factor_count=negative_count,
             behavior_direction=behavior,
+            behavior_score=behavior_score,
         )
 
 
