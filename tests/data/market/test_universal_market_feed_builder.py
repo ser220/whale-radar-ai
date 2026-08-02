@@ -424,3 +424,110 @@ def test_build_includes_open_interest_snapshot_when_service_is_supplied() -> Non
     )
     assert feed.open_interest_snapshot.exchange_count == 4
     assert feed.open_interest_snapshot.largest_market == "Binance"
+
+
+def test_build_appends_open_interest_snapshot_to_history() -> None:
+    from datetime import timedelta
+
+    from app.data.market import OpenInterestHistory
+    from app.domain.candle import Candle
+    from app.intelligence.data_sources import (
+        DataSourceCategory,
+        DataSourceType,
+        MarketSnapshot,
+    )
+
+    class WorkingCandleSource:
+        def source_name(self):
+            return "fake-candles"
+
+        def get_candles(
+            self,
+            asset,
+            interval,
+            start_time,
+            end_time=None,
+            limit=1000,
+        ):
+            return [
+                Candle(
+                    timestamp=NOW - timedelta(minutes=30),
+                    open=100,
+                    high=105,
+                    low=95,
+                    close=102,
+                    volume=10,
+                ),
+                Candle(
+                    timestamp=NOW - timedelta(minutes=15),
+                    open=102,
+                    high=106,
+                    low=101,
+                    close=104,
+                    volume=12,
+                ),
+            ]
+
+    class WorkingMarketCollector:
+        def collect(self, symbol):
+            return MarketSnapshot(
+                source_category=DataSourceCategory.EXCHANGE,
+                source=DataSourceType.BINANCE,
+                symbol=symbol,
+                price=104,
+                volume_24h=1000,
+                change_24h=2.5,
+                captured_at=NOW,
+            )
+
+    class WorkingOpenInterestService:
+        def build(self, asset):
+            return {
+                "status": "completed",
+                "asset": asset,
+                "exchange_count": 4,
+                "analytics": {
+                    "total_open_interest_usd": 16_800_000_000,
+                    "execution_open_interest_usd": 12_800_000_000,
+                    "largest_market": {
+                        "exchange": "Binance",
+                    },
+                },
+                "captured_at": NOW.isoformat(),
+            }
+
+    history = OpenInterestHistory()
+
+    builder = UniversalMarketFeedBuilder(
+        candle_source=WorkingCandleSource(),
+        market_collector=WorkingMarketCollector(),
+        open_interest_service=WorkingOpenInterestService(),
+        open_interest_history=history,
+    )
+
+    feed = builder.build(
+        instrument=build_instrument(),
+        timeframe="15m",
+        candle_count=2,
+        captured_at=NOW,
+    )
+
+    assert history.latest("BTC") is feed.open_interest_snapshot
+    assert history.snapshots("BTC") == (
+        feed.open_interest_snapshot,
+    )
+
+
+def test_open_interest_history_requires_append_boundary() -> None:
+    with pytest.raises(
+        TypeError,
+        match=(
+            "open_interest_history must provide append "
+            "or be None"
+        ),
+    ):
+        UniversalMarketFeedBuilder(
+            candle_source=FakeCandleSource(),
+            market_collector=FakeMarketCollector(),
+            open_interest_history=object(),
+        )

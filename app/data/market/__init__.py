@@ -1,3 +1,4 @@
+from .open_interest_history import OpenInterestHistory
 from .builder import UniversalMarketFeedBuilder
 from .feed import MarketFeed
 
@@ -22,6 +23,7 @@ from .simulation_feed import (
 )
 
 __all__ = [
+    "OpenInterestHistory",
     "UniversalMarketFeedBuilder",
     "MarketFeed",
     "HistoricalMarketPoint",

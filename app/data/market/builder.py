@@ -57,6 +57,7 @@ class UniversalMarketFeedBuilder:
         candle_source: Any,
         market_collector: Any,
         open_interest_service: Any = None,
+        open_interest_history: Any = None,
     ) -> None:
         if not (
             callable(
@@ -104,9 +105,24 @@ class UniversalMarketFeedBuilder:
                 "open_interest_service must provide build or be None"
             )
 
+        if (
+            open_interest_history is not None
+            and not callable(
+                getattr(
+                    open_interest_history,
+                    "append",
+                    None,
+                )
+            )
+        ):
+            raise TypeError(
+                "open_interest_history must provide append or be None"
+            )
+
         self._candle_source = candle_source
         self._market_collector = market_collector
         self._open_interest_service = open_interest_service
+        self._open_interest_history = open_interest_history
 
     @property
     def candle_source(self) -> Any:
@@ -119,6 +135,10 @@ class UniversalMarketFeedBuilder:
     @property
     def open_interest_service(self) -> Any:
         return self._open_interest_service
+
+    @property
+    def open_interest_history(self) -> Any:
+        return self._open_interest_history
 
     def build(
         self,
@@ -252,6 +272,11 @@ class UniversalMarketFeedBuilder:
                     )
                 ),
             )
+
+            if self.open_interest_history is not None:
+                self.open_interest_history.append(
+                    open_interest_snapshot
+                )
 
         component_timestamps = [
             normalized_captured_at,

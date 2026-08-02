@@ -14,6 +14,10 @@ from app.intelligence.early_bird.scanner.funding_factor import (
     FRESHNESS_WINDOW as FUNDING_FRESHNESS_WINDOW,
     FundingDivergenceFactor,
 )
+from app.intelligence.early_bird.scanner.open_interest_factor import (
+    FRESHNESS_WINDOW as OPEN_INTEREST_FRESHNESS_WINDOW,
+    OpenInterestChangeFactor,
+)
 
 
 __all__ = [
@@ -24,5 +28,7 @@ __all__ = [
     "EarlyBirdScanResult",
     "FUNDING_FRESHNESS_WINDOW",
     "FundingDivergenceFactor",
+    "OPEN_INTEREST_FRESHNESS_WINDOW",
+    "OpenInterestChangeFactor",
     "format_scan_result",
 ]
