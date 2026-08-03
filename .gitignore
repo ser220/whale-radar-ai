@@ -17,3 +17,11 @@ logs/
 # Keep Python cache files ignored after data-layer exceptions
 __pycache__/
 *.pyc
+
+# Telegram / Telethon sessions
+*.session
+*.session-journal
+
+# Telegram / Telethon sessions
+*.session
+*.session-journal

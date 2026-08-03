@@ -91,6 +91,16 @@ class DecisionApplicationService:
             created_at=read_model.created_at,
         )
 
+    def get_record(
+        self,
+        decision_id: str,
+    ) -> DecisionRecord | None:
+        """Return internal DecisionRecord for domain integrations."""
+
+        return self._governance.get(
+            decision_id
+        )
+
     def approve_decision(
         self,
         decision_id: str,
