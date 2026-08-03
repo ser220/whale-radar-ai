@@ -24,9 +24,6 @@ from app.intelligence.early_bird.explain import (
 )
 from app.intelligence.early_bird.models import EarlyBirdAssessment, EarlyBirdCandidate
 from app.intelligence.early_bird.policy import EarlyBirdPolicy
-from app.intelligence.early_bird.decision_input_mapper import (
-    EarlyBirdDecisionInputMapper,
-)
 
 
 __all__ = [
@@ -40,7 +37,6 @@ __all__ = [
     "EarlyBirdFactor",
     "EarlyBirdFactorValue",
     "EarlyBirdPolicy",
-    "EarlyBirdDecisionInputMapper",
     "FactorAvailability",
     "EmergingSituation",
     "EmergingSituationEngine",

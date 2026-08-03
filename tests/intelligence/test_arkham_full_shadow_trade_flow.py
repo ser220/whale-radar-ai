@@ -14,7 +14,7 @@ from app.intelligence.arkham.early_bird_mapper import (
     ArkhamEarlyBirdMapper,
 )
 
-from app.intelligence.early_bird.decision_input_mapper import (
+from app.intelligence.candidate_decision_input.early_bird_mapper import (
     EarlyBirdDecisionInputMapper,
 )
 

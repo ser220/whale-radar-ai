@@ -6,7 +6,7 @@ from app.intelligence.early_bird.models import (
     EarlyBirdCandidate,
 )
 
-from app.intelligence.early_bird.decision_input_mapper import (
+from app.intelligence.candidate_decision_input.early_bird_mapper import (
     EarlyBirdDecisionInputMapper,
 )
 

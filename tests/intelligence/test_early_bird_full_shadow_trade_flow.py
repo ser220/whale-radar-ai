@@ -2,6 +2,9 @@ from datetime import datetime, timezone
 
 from app.intelligence.early_bird import (
     EarlyBirdCandidate,
+)
+
+from app.intelligence.candidate_decision_input.early_bird_mapper import (
     EarlyBirdDecisionInputMapper,
 )
 
