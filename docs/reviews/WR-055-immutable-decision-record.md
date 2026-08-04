@@ -7,8 +7,11 @@ Introduce the first immutable contract of the Decision Domain.
 The Candidate Pipeline is responsible for discovering, validating, enriching,
 and preparing trading opportunities.
 
-Once a candidate becomes eligible for decision making, the Intelligence layer
-must produce an immutable Decision Record.
+Once a candidate becomes eligible for decision making, Candidate Intelligence
+provides immutable Decision Input.
+
+The Decision Domain consumes this input and creates the immutable Decision
+Record.
 
 This record represents the fact that a decision has been created.
 
@@ -57,23 +60,32 @@ Candidate Pipeline
 
 ↓
 
+Immutable Decision Input
+
+↓
+
+Decision Domain
+
+↓
+
 Decision Record
 
 ↓
 
 Decision Runtime
 
-↓
 
-Execution
+Independent future bounded contexts:
 
-↓
-
-Evaluation
+Execution Domain
 
 ↓
 
-Learning
+Evaluation Domain
+
+↓
+
+Learning Domain
 
 ---
 
@@ -94,11 +106,10 @@ Future Decision Domain components will consume this contract:
 
 - Runtime Engine
 - Governance Engine
-- Execution Engine
-- Evaluation Engine
-- Learning Engine
 
-without modifying the original Decision Record.
+Execution, Evaluation and Learning capabilities remain separate bounded
+contexts and consume Decision outputs without modifying the original
+Decision Record.
 
 ---
 
