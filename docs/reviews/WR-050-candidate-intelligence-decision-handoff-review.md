@@ -32,12 +32,21 @@ The Decision domain consumes the provided input and owns decision lifecycle.
 
 ## Handoff Flow
 
-    |
-    v
-    |
-    v
-    |
-    v
+```
+Candidate Intelligence
+        |
+        v
+Candidate Decision Input Projection
+        |
+        v
+Decision Input Availability
+        |
+        v
+Decision Governance Consumer
+        |
+        v
+Decision Domain
+```
 
 ---
 
@@ -70,6 +79,16 @@ Decision domain owns:
 
 The handoff artifact is:
 
+**Immutable Decision Input Contract**
+
+The contract transfers validated information only.
+
+It does not contain:
+
+- decision outcome;
+- execution instruction;
+- order information;
+- trading action.
 
 Properties:
 
@@ -113,3 +132,6 @@ WR-037 through WR-049 establish the Candidate Intelligence bounded context.
 WR-050 confirms the controlled handoff boundary into the Decision domain.
 
 Future decision-related implementation must remain owned by the Decision bounded context.
+
+Decision Domain creates Decision Records. Candidate Intelligence only provides
+immutable decision input.
