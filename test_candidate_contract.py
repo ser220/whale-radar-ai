@@ -1,4 +1,5 @@
 import unittest
+from types import MappingProxyType
 from datetime import datetime, timezone
 
 from app.intelligence.candidates.enums import (
@@ -124,6 +125,42 @@ class TestCandidateHypothesis(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             candidate.metadata["tags"][0] = "price"
+
+
+    def test_mapping_proxy_nested_metadata_is_deeply_frozen(self):
+        mutable_list = []
+
+        candidate = CandidateHypothesis(
+            candidate_id="cand-mapping",
+            candidate_version=1,
+            candidate_identity_policy_version="v1",
+            candidate_policy_version="v1",
+            category=CandidateCategory.MARKET,
+            subject="BTCUSDT",
+            hypothesis_reference="market.event.mapping",
+            description="Mapping proxy metadata test",
+            status=CandidateStatus.CREATED,
+            created_at=datetime(
+                2026,
+                1,
+                1,
+                12,
+                0,
+                tzinfo=timezone.utc,
+            ),
+            metadata=MappingProxyType(
+                {
+                    "nested": mutable_list,
+                }
+            ),
+        )
+
+        mutable_list.append("changed")
+
+        self.assertEqual(
+            candidate.metadata["nested"],
+            (),
+        )
 
     def test_serialization(self):
         candidate = build_candidate()

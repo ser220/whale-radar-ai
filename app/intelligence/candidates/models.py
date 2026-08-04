@@ -1,11 +1,12 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from types import MappingProxyType
+from collections.abc import Mapping as ABCMapping
 from typing import Any, Dict, Mapping, Tuple
 
 
 def _deep_freeze(value):
-    if isinstance(value, dict):
+    if isinstance(value, ABCMapping):
         return MappingProxyType(
             {
                 key: _deep_freeze(item)
@@ -56,6 +57,8 @@ class CandidateHypothesis:
 
     status: CandidateStatus
 
+    created_at: datetime
+
     supporting_evidence_refs: Tuple[str, ...] = field(
         default_factory=tuple
     )
@@ -66,10 +69,6 @@ class CandidateHypothesis:
 
     limitation_references: Tuple[str, ...] = field(
         default_factory=tuple
-    )
-
-    created_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
     )
 
     metadata: Mapping[str, Any] = field(
