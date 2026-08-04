@@ -23,10 +23,14 @@ Candidate Pipeline
 Decision Domain
         │
         ├── Governance
-        ├── Runtime
-        ├── Execution (future)
-        ├── Evaluation (future)
-        └── Learning (future)
+        └── Runtime
+
+
+Independent future bounded contexts:
+
+Execution Domain
+Evaluation Domain
+Learning Domain
 ```
 
 ---
@@ -85,12 +89,11 @@ Decision Domain never regenerates Candidate Intelligence.
 Future WR milestones may introduce:
 
 - Governance contracts;
-- Runtime contracts;
-- Execution contracts;
-- Evaluation contracts;
-- Learning contracts.
+- Runtime contracts.
 
-These must extend the Decision Domain without violating this boundary.
+Execution, Evaluation and Learning capabilities must be introduced
+as separate bounded contexts and must not extend the Decision Domain
+boundary.
 
 ---
 
