@@ -77,6 +77,21 @@ The Candidate Intelligence domain guarantees:
 - compatibility validation
 
 
+## WR-037 Contract Alignment
+
+The original Candidate Generation boundary has been aligned with the
+immutable contract requirements.
+
+WR-037 now provides:
+
+- deep immutability of candidate metadata;
+- deterministic candidate construction through caller-supplied timestamps;
+- identity generation based on namespace and supporting evidence references.
+
+The Candidate Intelligence closure review is evaluated against the corrected
+WR-037 implementation.
+
+
 ## Non-Responsibilities
 
 Candidate Intelligence does NOT contain:
@@ -105,6 +120,11 @@ It does not own:
 
 ## Closure Statement
 
-WR-037 through WR-047 establish a complete Candidate Intelligence bounded context.
+Following the WR-037 contract alignment, WR-037 through WR-047 establish a
+complete Candidate Intelligence bounded context.
 
-Further development should introduce new bounded contexts only when ownership and responsibility boundaries are clearly defined.
+The bounded context provides immutable, versioned and read-oriented
+information contracts.
+
+Further development should introduce new bounded contexts only when ownership
+and responsibility boundaries are clearly defined.
