@@ -112,6 +112,18 @@ The two bounded contexts remain independent.
 
 ---
 
+# WR-037 Contract Alignment
+
+WR-037 Candidate Generation Boundary has been aligned with the immutable
+candidate contract requirements.
+
+The Candidate Pipeline closure is evaluated against the repaired WR-037
+implementation:
+
+- deep immutable candidate metadata;
+- deterministic candidate construction through caller-supplied timestamps;
+- strengthened candidate identity boundaries.
+
 # Architecture Status
 
 Candidate Pipeline:
