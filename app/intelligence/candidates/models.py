@@ -3,6 +3,37 @@ from datetime import datetime, timezone
 from types import MappingProxyType
 from typing import Any, Dict, Mapping, Tuple
 
+
+def _deep_freeze(value):
+    if isinstance(value, dict):
+        return MappingProxyType(
+            {
+                key: _deep_freeze(item)
+                for key, item in value.items()
+            }
+        )
+
+    if isinstance(value, list):
+        return tuple(
+            _deep_freeze(item)
+            for item in value
+        )
+
+    if isinstance(value, tuple):
+        return tuple(
+            _deep_freeze(item)
+            for item in value
+        )
+
+    if isinstance(value, set):
+        return frozenset(
+            _deep_freeze(item)
+            for item in value
+        )
+
+    return value
+
+
 from app.intelligence.candidates.enums import (
     CandidateCategory,
     CandidateStatus,
@@ -86,7 +117,7 @@ class CandidateHypothesis:
         object.__setattr__(
             self,
             "metadata",
-            MappingProxyType(dict(self.metadata)),
+            _deep_freeze(self.metadata),
         )
 
     def to_dict(self) -> Dict[str, Any]:

@@ -87,6 +87,44 @@ class TestCandidateHypothesis(unittest.TestCase):
         with self.assertRaises(TypeError):
             candidate.metadata["x"] = "y"
 
+
+
+    def test_nested_metadata_is_deeply_frozen(self):
+        candidate = CandidateHypothesis(
+            candidate_id="cand-nested",
+            candidate_version=1,
+            candidate_identity_policy_version="v1",
+            candidate_policy_version="v1",
+            category=CandidateCategory.MARKET,
+            subject="BTCUSDT",
+            hypothesis_reference="market.event.nested",
+            description="Nested metadata test",
+            status=CandidateStatus.CREATED,
+            created_at=datetime(
+                2026,
+                1,
+                1,
+                12,
+                0,
+                tzinfo=timezone.utc,
+            ),
+            metadata={
+                "source": {
+                    "exchange": "OKX",
+                },
+                "tags": [
+                    "liquidity",
+                    "volume",
+                ],
+            },
+        )
+
+        with self.assertRaises(TypeError):
+            candidate.metadata["source"]["exchange"] = "BINANCE"
+
+        with self.assertRaises(TypeError):
+            candidate.metadata["tags"][0] = "price"
+
     def test_serialization(self):
         candidate = build_candidate()
 

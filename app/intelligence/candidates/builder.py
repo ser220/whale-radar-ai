@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Iterable, Mapping, Any, Optional
 
 from app.intelligence.candidates.identity import (
@@ -21,6 +21,7 @@ class CandidateBuilder:
         self,
         identity_policy_version: str = "v1",
         candidate_policy_version: str = "v1",
+        namespace: str = "default",
     ):
         self.identity_policy_version = (
             identity_policy_version
@@ -28,6 +29,7 @@ class CandidateBuilder:
         self.candidate_policy_version = (
             candidate_policy_version
         )
+        self.namespace = namespace
 
     def build(
         self,
@@ -39,13 +41,22 @@ class CandidateBuilder:
         supporting_evidence_refs: Iterable[str] = (),
         contradicting_evidence_refs: Iterable[str] = (),
         limitation_references: Iterable[str] = (),
+        created_at: datetime,
         metadata: Optional[Mapping[str, Any]] = None,
     ) -> CandidateHypothesis:
 
+        supporting_evidence_refs = tuple(
+            supporting_evidence_refs
+        )
+
         candidate_id = build_candidate_id(
+            namespace=self.namespace,
             subject=subject,
             category=category.value,
             hypothesis_reference=hypothesis_reference,
+            supporting_evidence_refs=(
+                supporting_evidence_refs
+            ),
             identity_policy_version=(
                 self.identity_policy_version
             ),
@@ -67,7 +78,7 @@ class CandidateBuilder:
             ),
             description=description,
             status=CandidateStatus.CREATED,
-            supporting_evidence_refs=tuple(
+            supporting_evidence_refs=(
                 supporting_evidence_refs
             ),
             contradicting_evidence_refs=tuple(
@@ -76,6 +87,6 @@ class CandidateBuilder:
             limitation_references=tuple(
                 limitation_references
             ),
-            created_at=datetime.now(timezone.utc),
+            created_at=created_at,
             metadata=metadata or {},
         )

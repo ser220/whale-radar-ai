@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime, timezone
 
 from app.intelligence.candidates import (
     CandidateBuilder,
@@ -17,6 +18,14 @@ class TestCandidateBuilder(unittest.TestCase):
             subject="BTCUSDT",
             hypothesis_reference="event-001",
             description="Liquidity transition candidate",
+            created_at=datetime(
+                2026,
+                1,
+                1,
+                12,
+                0,
+                tzinfo=timezone.utc,
+            ),
         )
 
         self.assertEqual(
@@ -43,6 +52,14 @@ class TestCandidateBuilder(unittest.TestCase):
             subject="BTCUSDT",
             hypothesis_reference="event-001",
             description="Test",
+            created_at=datetime(
+                2026,
+                1,
+                1,
+                12,
+                0,
+                tzinfo=timezone.utc,
+            ),
         )
 
         second = builder.build(
@@ -50,6 +67,14 @@ class TestCandidateBuilder(unittest.TestCase):
             subject="BTCUSDT",
             hypothesis_reference="event-001",
             description="Different text",
+            created_at=datetime(
+                2026,
+                1,
+                1,
+                12,
+                0,
+                tzinfo=timezone.utc,
+            ),
         )
 
         self.assertEqual(
@@ -68,6 +93,14 @@ class TestCandidateBuilder(unittest.TestCase):
             subject="ETHUSDT",
             hypothesis_reference="event-002",
             description="Structure candidate",
+            created_at=datetime(
+                2026,
+                1,
+                1,
+                12,
+                0,
+                tzinfo=timezone.utc,
+            ),
         )
 
         self.assertEqual(

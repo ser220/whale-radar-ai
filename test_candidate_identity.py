@@ -9,16 +9,20 @@ class TestCandidateIdentity(unittest.TestCase):
 
     def test_same_input_same_id(self):
         first = build_candidate_id(
+            namespace="market",
             subject="BTCUSDT",
             category="MARKET",
             hypothesis_reference="event-1",
+            supporting_evidence_refs=(),
             identity_policy_version="v1",
         )
 
         second = build_candidate_id(
+            namespace="market",
             subject="BTCUSDT",
             category="MARKET",
             hypothesis_reference="event-1",
+            supporting_evidence_refs=(),
             identity_policy_version="v1",
         )
 
@@ -26,16 +30,20 @@ class TestCandidateIdentity(unittest.TestCase):
 
     def test_different_subject_changes_id(self):
         first = build_candidate_id(
+            namespace="market",
             subject="BTCUSDT",
             category="MARKET",
             hypothesis_reference="event-1",
+            supporting_evidence_refs=(),
             identity_policy_version="v1",
         )
 
         second = build_candidate_id(
+            namespace="market",
             subject="ETHUSDT",
             category="MARKET",
             hypothesis_reference="event-1",
+            supporting_evidence_refs=(),
             identity_policy_version="v1",
         )
 
@@ -43,9 +51,11 @@ class TestCandidateIdentity(unittest.TestCase):
 
     def test_prefix(self):
         candidate_id = build_candidate_id(
+            namespace="market",
             subject="BTCUSDT",
             category="MARKET",
             hypothesis_reference="event-1",
+            supporting_evidence_refs=(),
             identity_policy_version="v1",
         )
 
